@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { EDGES, makeSessionNodes, sessionSlug } from "@/lib/session";
 import TopBar from "@/components/hud/TopBar";
+import FrontDoor from "./FrontDoor";
 import Present from "./Present";
 import Cockpit from "./Cockpit";
 
-/* Client-side session orchestration. Present → Cockpit for now; real
-   phase progression (Clarify etc.) lands with the agents. Persistence is
-   localStorage until Supabase sessions arrive. */
+/* Client-side session orchestration: front door → present → cockpit.
+   Persistence is localStorage until Supabase sessions arrive. */
 
 const STORE_KEY = "id8.session.v1";
 
@@ -18,6 +18,7 @@ interface Stored {
 }
 
 export default function Session() {
+  const [door, setDoor] = useState(true);
   const [thesis, setThesis] = useState("");
   const [presented, setPresented] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -52,22 +53,22 @@ export default function Session() {
     localStorage.removeItem(STORE_KEY);
   };
 
-  const label = presented
-    ? `session 001 · ${sessionSlug(thesis)}`
-    : "session 001 · new idea";
+  const enter = () => {
+    setDoor(false);
+    setTimeout(() => document.getElementById("id8-input")?.focus(), 60);
+  };
+
+  const label = presented ? `session 001 · ${sessionSlug(thesis)}` : "session 001 · new idea";
 
   return (
     <>
-      <TopBar
-        session={label}
-        phase={presented ? 2 : 0}
-        onReset={presented ? reset : undefined}
-      />
+      <TopBar session={label} phase={presented ? 2 : 0} onReset={presented ? reset : undefined} />
       {presented ? (
         <Cockpit nodes={nodes} edges={EDGES} activePhase={2} />
       ) : (
         <Present value={thesis} onChange={setThesis} onCommit={() => setPresented(true)} />
       )}
+      {door && <FrontDoor onDone={enter} />}
     </>
   );
 }
