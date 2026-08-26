@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
+/* ---------- darkroom tokens ---------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0a0a09;
+  --ink: #e9e4d6;
+  --muted: #8b8678;
+  --faint: #4e4b43;
+  --line: #232219;
+  --panel: rgba(16, 16, 14, 0.84);
+  --panel2: rgba(24, 23, 19, 0.9);
+  --lock: #cfff2e;
+  --lock-ink: #0a0a09;
+  --good: #3ed47e;
+  --bad: #ff4b1f;
+  --gridline: rgba(233, 228, 214, 0.05);
+  --glow: rgba(233, 228, 214, 0.14);
+  --mono: var(--font-jbmono), "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --grot: "Helvetica Neue", -apple-system, "Segoe UI", Arial, sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-lock: var(--lock);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --font-mono: var(--mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  font-family: var(--grot);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
+button { font: inherit; cursor: pointer; }
+::selection { background: var(--lock); color: var(--bg); }
+
+/* film grain */
+.grain {
+  position: fixed; inset: 0; pointer-events: none; z-index: 40; opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.49 0 0 0 0 0.44 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* viewfinder crop marks */
+.crop { position: fixed; width: 22px; height: 22px; z-index: 30; pointer-events: none; opacity: 0.6; }
+.crop::before, .crop::after { content: ""; position: absolute; background: var(--muted); }
+.crop::before { width: 1px; height: 100%; }
+.crop::after { height: 1px; width: 100%; }
+.crop.tl { top: 14px; left: 14px; }
+.crop.tr { top: 14px; right: 14px; transform: scaleX(-1); }
+.crop.bl { bottom: 14px; left: 14px; transform: scaleY(-1); }
+.crop.br { bottom: 14px; right: 14px; transform: scale(-1); }
+@media (max-width: 900px) { .crop { display: none; } }
+
+/* HUD panel + corner brackets */
+.hud {
+  position: absolute;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  padding: 15px 17px;
+  z-index: 15;
+}
+.hud .corner { position: absolute; width: 10px; height: 10px; pointer-events: none; }
+.hud .corner::before, .hud .corner::after { content: ""; position: absolute; background: var(--ink); }
+.hud .corner::before { width: 1px; height: 10px; }
+.hud .corner::after { width: 10px; height: 1px; }
+.hud .c1 { top: -1px; left: -1px; }
+.hud .c2 { top: -1px; right: -1px; transform: scaleX(-1); }
+.hud .c3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
+.hud .c4 { bottom: -1px; right: -1px; transform: scale(-1); }
+.hud-label {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 11px;
+  display: flex; justify-content: space-between; gap: 8px; align-items: baseline;
+}
+
+@media (max-width: 900px) {
+  .hud { position: static !important; width: auto !important; max-height: none !important; margin: 12px 18px 0; }
+  .stage { display: flex; flex-direction: column; height: auto !important; max-height: none !important; }
+  .stage canvas { position: relative !important; height: 52vh; min-height: 380px; }
+  .hud-readout, .stage-hint { display: none !important; }
+}
+
+.blink {
+  display: inline-block; width: 7px; height: 14px; vertical-align: text-bottom;
+  background: var(--lock); animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .blink { animation: none; } }
