@@ -19,18 +19,17 @@ export default function AgentFeed({ lines }: { lines: FeedLine[] }) {
 
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      setChars(line.text.length);
-      const t = setTimeout(() => { setLi((i) => (i + 1) % lines.length); setChars(0); }, 6000);
-      return () => clearTimeout(t);
-    }
-    if (chars < line.text.length) {
-      const t = setTimeout(() => setChars((c) => c + 1), 16 + Math.random() * 20);
-      return () => clearTimeout(t);
-    }
-    const t = setTimeout(() => { setLi((i) => (i + 1) % lines.length); setChars(0); }, 5200);
+    const done = chars >= line.text.length;
+    const delay = done ? (reduced ? 6000 : 5200) : reduced ? 0 : 16 + Math.random() * 20;
+    const t = setTimeout(() => {
+      if (!done) setChars(reduced ? line.text.length : chars + 1);
+      else {
+        setLi((i) => (i + 1) % lines.length);
+        setChars(0);
+      }
+    }, delay);
     return () => clearTimeout(t);
-  }, [chars, li, line.text, lines.length]);
+  }, [chars, li, line.text.length, lines.length]);
 
   return (
     <Panel label="agent feed" className="bottom-[92px] left-10 w-[min(440px,calc(100%-80px))]">

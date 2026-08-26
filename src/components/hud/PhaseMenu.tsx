@@ -1,13 +1,13 @@
-import { PHASES, ACTIVE_PHASE } from "@/lib/session";
+import { PHASES } from "@/lib/session";
 import Panel from "./Panel";
 
 /* Phase list with bracket-select hover states. */
-export default function PhaseMenu() {
+export default function PhaseMenu({ activePhase }: { activePhase: number }) {
   return (
     <Panel label="phases" className="left-10 top-8 w-[200px]">
       <nav aria-label="Phases">
         {PHASES.map((p, i) => {
-          const state = i < ACTIVE_PHASE ? "done" : i === ACTIVE_PHASE ? "active" : "todo";
+          const state = i < activePhase ? "done" : i === activePhase ? "active" : "todo";
           return (
             <button
               key={p}

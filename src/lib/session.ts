@@ -40,7 +40,18 @@ export interface FeedLine {
 }
 
 export const PHASES = ["Present", "Clarify", "Challenge", "Structure", "Commit"] as const;
-export const ACTIVE_PHASE = 2; // Challenge
+
+/* Minimum-effort gate: id8 won't accept a headline as an idea. */
+export const MIN_WORDS = 25;
+
+export function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+export function sessionSlug(thesis: string): string {
+  const s = thesis.trim().split(/\s+/).slice(0, 4).join(" ").toLowerCase();
+  return s.length > 28 ? s.slice(0, 28) + "…" : s || "untitled";
+}
 
 export const NODES: IdeaNode[] = [
   {
@@ -142,3 +153,20 @@ export const FEED: FeedLine[] = [
 ];
 
 export const nodeById = Object.fromEntries(NODES.map((n) => [n.id, n]));
+
+/* Inject the user's typed thesis into the session graph. Everything else
+   stays mock until the agents are wired — the core is always theirs. */
+export function makeSessionNodes(thesis: string): IdeaNode[] {
+  return NODES.map((n) =>
+    n.kind === "core"
+      ? {
+          ...n,
+          sub: sessionSlug(thesis),
+          dossier: {
+            ...n.dossier,
+            body: [`“${thesis.trim()}”`],
+          },
+        }
+      : n
+  );
+}

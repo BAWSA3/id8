@@ -25,7 +25,10 @@ const DEBRIS_COUNT = 26;
 export default function Constellation({ nodes, edges, lockedId, onLock, onYaw }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lockedRef = useRef(lockedId);
-  lockedRef.current = lockedId;
+
+  useEffect(() => {
+    lockedRef.current = lockedId;
+  }, [lockedId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
