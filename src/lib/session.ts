@@ -147,26 +147,95 @@ export const EDGES: IdeaEdge[] = [
 ];
 
 export const FEED: FeedLine[] = [
-  { agent: "clarifier", text: "When you say “early” — early relative to what? Attention, price, or usage? They diverge here." },
-  { agent: "analyst", text: "EV-01 in. Sector netflow −$41.7M over 30d. The rotation you predicted has not started." },
-  { agent: "skeptic", text: "Smart money has been the seller for 30 days. Why is your thesis more than hope with a dashboard?" },
+  { agent: "clarifier", text: "Your assumptions are on the board. Click one to inspect what it rests on." },
+  { agent: "analyst", text: "Standing by. Evidence cards arrive when the Nansen feed goes live — then your assumptions get tested against the chain." },
+  { agent: "skeptic", text: "Every assumption up there is unverified. Which one would hurt most if it broke?" },
 ];
 
 export const nodeById = Object.fromEntries(NODES.map((n) => [n.id, n]));
 
-/* Inject the user's typed thesis into the session graph. Everything else
-   stays mock until the agents are wired — the core is always theirs. */
-export function makeSessionNodes(thesis: string): IdeaNode[] {
-  return NODES.map((n) =>
-    n.kind === "core"
-      ? {
-          ...n,
-          sub: sessionSlug(thesis),
-          dossier: {
-            ...n.dossier,
-            body: [`“${thesis.trim()}”`],
-          },
-        }
-      : n
-  );
+/* ---------- real sessions: clarifier output → constellation ---------- */
+
+export interface QA {
+  q: string;
+  a: string;
+}
+
+export interface Extraction {
+  claim: string;
+  audience: string;
+  assumptions: { text: string; basis: string }[];
+  openQuestions: string[];
+}
+
+function shortLabel(text: string, words = 3): string {
+  return text.trim().split(/\s+/).slice(0, words).join(" ").toLowerCase();
+}
+
+/* Build the constellation from what the Clarifier extracted — every node is
+   the user's own words. Evidence nodes arrive later, with Nansen. */
+export function nodesFromExtraction(thesis: string, ex: Extraction): {
+  nodes: IdeaNode[];
+  edges: IdeaEdge[];
+} {
+  const nodes: IdeaNode[] = [
+    {
+      id: "thesis",
+      label: "THESIS",
+      sub: sessionSlug(thesis),
+      pos: [0, 0, 0],
+      kind: "core",
+      dossier: {
+        title: "Thesis",
+        sub: "typed by hand · authorship 100% human",
+        tag: { label: "core", tone: "lock" },
+        body: [
+          `“${ex.claim}”`,
+          ex.audience !== "unstated" ? `for: ${ex.audience}` : "audience: unstated — worth knowing",
+        ],
+      },
+    },
+  ];
+  const edges: IdeaEdge[] = [];
+
+  const n = ex.assumptions.length;
+  ex.assumptions.forEach((a, i) => {
+    const angle = (i / n) * Math.PI * 2 + 0.5;
+    const id = `a${i + 1}`;
+    nodes.push({
+      id,
+      label: `A${i + 1}`,
+      sub: shortLabel(a.text),
+      pos: [Math.cos(angle) * 200, (i % 2 === 0 ? -1 : 1) * 38, Math.sin(angle) * 200],
+      kind: "assumption",
+      dossier: {
+        title: `A${i + 1} — ${a.text.slice(0, 48)}${a.text.length > 48 ? "…" : ""}`,
+        sub: "assumption · extracted from your words",
+        tag: { label: "unverified", tone: "neutral" },
+        body: [a.text, `from your words: “${a.basis}”`],
+      },
+    });
+    edges.push({ from: "thesis", to: id, kind: "neutral" });
+  });
+
+  ex.openQuestions.forEach((q, i) => {
+    const angle = ((i + 0.5) / ex.openQuestions.length) * Math.PI * 2 + 2.1;
+    const id = `risk${i + 1}`;
+    nodes.push({
+      id,
+      label: `RISK-${i + 1}`,
+      sub: shortLabel(q),
+      pos: [Math.cos(angle) * 265, 72, Math.sin(angle) * 265],
+      kind: "risk",
+      dossier: {
+        title: `RISK — open question`,
+        sub: "raised by the clarifier · unresolved",
+        tag: { label: "unverified", tone: "contested" },
+        body: [q],
+      },
+    });
+    edges.push({ from: id, to: "thesis", kind: "contradicts" });
+  });
+
+  return { nodes, edges };
 }
