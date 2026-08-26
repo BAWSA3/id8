@@ -1,0 +1,196 @@
+<title>id8 — logo prototypes</title>
+<style>
+  :root{
+    --black:#0B0B0A; --cream:#E9E4D6; --muted:#8B8678; --faint:#4E4B43;
+    --line:#232219; --paper:#F3EFE6; --paper-ink:#1F1D18; --paper-line:#DDD7C8;
+    --paper-muted:#85806F; --sage:#6B7F5E;
+    --mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    --grot:"Helvetica Neue",-apple-system,"Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--grot);background:var(--black);color:var(--cream);
+       font-size:14px;line-height:1.55}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:.4;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.49 0 0 0 0 0.44 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:48px 32px 90px}
+  header{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+         flex-wrap:wrap;margin-bottom:14px}
+  header h1{font-family:var(--mono);font-size:11px;letter-spacing:.24em;
+            text-transform:uppercase;color:var(--muted);margin:0;font-weight:400}
+  header span{font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+              text-transform:uppercase;color:var(--faint)}
+  .intro{font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.03em;
+         max-width:62ch;margin:0 0 40px;line-height:1.8}
+  .intro b{color:var(--cream);font-weight:400}
+
+  .slides{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:18px}
+  @media(max-width:560px){.slides{grid-template-columns:1fr}}
+  .slide{position:relative;border:1px solid var(--line);background:var(--black);
+         min-height:320px;display:flex;align-items:center;justify-content:center;padding:64px 30px}
+  .slide.paper{background:var(--paper);border-color:var(--paper-line)}
+  .slide .no{position:absolute;top:16px;left:18px;font-family:var(--mono);font-size:10px;
+             letter-spacing:.14em;color:var(--faint)}
+  .slide .tag{position:absolute;top:16px;right:18px;font-family:var(--mono);font-size:10px;
+              letter-spacing:.14em;color:var(--faint);text-transform:uppercase;text-align:right}
+  .slide .note{position:absolute;bottom:16px;left:18px;right:18px;font-family:var(--mono);
+               font-size:10px;letter-spacing:.08em;color:var(--muted);line-height:1.7}
+  .slide .note b{color:var(--cream);font-weight:400}
+  .slide.paper .no,.slide.paper .tag{color:#B8B2A2}
+  .slide.paper .note{color:var(--paper-muted)}
+  .slide.paper .note b{color:var(--paper-ink)}
+
+  /* ---------- the eclipse ---------- */
+  .orb{position:relative;flex:none}
+  .orb .trail{position:absolute;inset:0;border-radius:50%;filter:blur(var(--blur,11px));
+              transform:translateX(calc(var(--sz,74px) * -.22)) scaleX(1.55);opacity:.5}
+  .orb .core{position:absolute;inset:0;border-radius:50%}
+  .orb.on-black .core{background:radial-gradient(circle at 40% 38%, var(--cream), var(--cream) 52%, transparent 74%)}
+  .orb.on-black .trail{background:radial-gradient(circle at 62% 50%, var(--cream), transparent 58%)}
+  .orb.on-paper .core{background:radial-gradient(circle at 40% 38%, var(--paper-ink), var(--paper-ink) 52%, transparent 74%)}
+  .orb.on-paper .trail{background:radial-gradient(circle at 62% 50%, var(--paper-ink), transparent 58%);opacity:.35}
+
+  .lockup{display:flex;align-items:center;gap:26px}
+  .type{letter-spacing:-.02em}
+  .type .rm{font-weight:700}
+  .type .it{font-style:italic;font-weight:300}
+  .slide.paper .type{color:var(--paper-ink)}
+
+  .stacked{display:flex;flex-direction:column;align-items:center;gap:22px}
+
+  /* breathing motion cell */
+  .breathe .core{animation:orbbreathe 5s ease-in-out infinite}
+  .breathe .trail{animation:trailbreathe 5s ease-in-out infinite}
+  @keyframes orbbreathe{0%,100%{transform:scale(.96)}50%{transform:scale(1.03)}}
+  @keyframes trailbreathe{0%,100%{opacity:.35}50%{opacity:.6}}
+  @media(prefers-reduced-motion:reduce){.breathe .core,.breathe .trail{animation:none}}
+
+  /* icon tiles */
+  .icons{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;justify-content:center}
+  .tile{display:flex;align-items:center;justify-content:center;border-radius:22%;position:relative}
+  .tile.t-black{background:var(--black);border:1px solid var(--line)}
+  .tile.t-paper{background:var(--paper);border:1px solid var(--paper-line)}
+  .tile.t-sage{background:var(--sage)}
+  .tile .orb .core{background:radial-gradient(circle at 40% 38%, var(--cream), var(--cream) 52%, transparent 74%)}
+  .tile .orb .trail{background:radial-gradient(circle at 62% 50%, var(--cream), transparent 58%)}
+  .tile.t-paper .orb .core{background:radial-gradient(circle at 40% 38%, var(--paper-ink), var(--paper-ink) 52%, transparent 74%)}
+  .tile.t-paper .orb .trail{background:radial-gradient(circle at 62% 50%, var(--paper-ink), transparent 58%);opacity:.3}
+  .iconlabel{position:absolute;bottom:-22px;left:0;right:0;text-align:center;
+             font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
+
+  footer{margin-top:56px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+         font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--faint);
+         text-transform:uppercase}
+</style>
+
+<div class="grain"></div>
+<div class="wrap">
+  <header>
+    <h1>id8 — identity study 02 · the eclipse</h1>
+    <span>refining treatment B · bawsa studio · aug 2026</span>
+  </header>
+  <p class="intro"><b>direction locked: the MindShift treatment.</b> the eclipse is the idea —
+     a body mid-motion, catching light. roman "id" + light italic "8": the italic is the
+     idea moving. below: the primary lockup both lights, an i-dot merge experiment,
+     the stacked + icon system, and the living (breathing) version.</p>
+
+  <div class="slides">
+
+    <!-- 01 primary on black -->
+    <div class="slide">
+      <span class="no">01</span>
+      <span class="tag">primary<br>on black</span>
+      <div class="lockup">
+        <span class="orb on-black" style="--sz:74px;width:74px;height:74px"><span class="trail"></span><span class="core"></span></span>
+        <span class="type" style="font-size:56px"><span class="rm">id</span><span class="it">8</span></span>
+      </div>
+      <p class="note"><b>primary lockup.</b> orb leads at cap-height scale; type sits optically
+         centered. tightened from study 01 — orb pulled closer, italic 8 slightly larger.</p>
+    </div>
+
+    <!-- 02 primary on paper -->
+    <div class="slide paper">
+      <span class="no">02</span>
+      <span class="tag">primary<br>on paper</span>
+      <div class="lockup">
+        <span class="orb on-paper" style="--sz:74px;width:74px;height:74px"><span class="trail"></span><span class="core"></span></span>
+        <span class="type" style="font-size:56px"><span class="rm">id</span><span class="it">8</span></span>
+      </div>
+      <p class="note"><b>the product ground.</b> ink eclipse on ivory — the trail reads as
+         graphite smudge, which suits the paper world beautifully. this is what the front door wears.</p>
+    </div>
+
+    <!-- 03 the i-dot merge -->
+    <div class="slide">
+      <span class="no">03</span>
+      <span class="tag">experiment<br>i-dot merge</span>
+      <div class="type" style="font-size:64px;position:relative">
+        <span class="orb on-black" style="--sz:20px;--blur:6px;width:20px;height:20px;position:absolute;left:6px;top:2px"><span class="trail"></span><span class="core"></span></span>
+        <span class="rm">ıd</span><span class="it">8</span>
+      </div>
+      <p class="note"><b>mark and wordmark become one</b> — the eclipse is the dot of the i.
+         clever, compact, but the orb gets tiny at small sizes. candidate for the wordmark-only
+         contexts, not the primary.</p>
+    </div>
+
+    <!-- 04 stacked -->
+    <div class="slide">
+      <span class="no">04</span>
+      <span class="tag">stacked<br>square uses</span>
+      <div class="stacked">
+        <span class="orb on-black" style="--sz:64px;width:64px;height:64px"><span class="trail"></span><span class="core"></span></span>
+        <span class="type" style="font-size:42px"><span class="rm">id</span><span class="it">8</span></span>
+      </div>
+      <p class="note"><b>stacked lockup</b> for square placements — social avatars, the front
+         door hero, splash moments. orb above, type below, generous air.</p>
+    </div>
+
+    <!-- 05 icon system -->
+    <div class="slide">
+      <span class="no">05</span>
+      <span class="tag">app icon<br>system</span>
+      <div class="icons">
+        <span class="tile t-black" style="width:96px;height:96px">
+          <span class="orb" style="--sz:44px;--blur:8px;width:44px;height:44px"><span class="trail"></span><span class="core"></span></span>
+          <span class="iconlabel">black</span>
+        </span>
+        <span class="tile t-paper" style="width:96px;height:96px">
+          <span class="orb" style="--sz:44px;--blur:8px;width:44px;height:44px"><span class="trail"></span><span class="core"></span></span>
+          <span class="iconlabel">paper</span>
+        </span>
+        <span class="tile t-sage" style="width:96px;height:96px">
+          <span class="orb" style="--sz:44px;--blur:8px;width:44px;height:44px"><span class="trail"></span><span class="core"></span></span>
+          <span class="iconlabel">sage</span>
+        </span>
+        <span class="tile t-black" style="width:44px;height:44px">
+          <span class="orb" style="--sz:22px;--blur:4px;width:22px;height:22px"><span class="trail"></span><span class="core"></span></span>
+          <span class="iconlabel">32px</span>
+        </span>
+        <span class="tile t-black" style="width:26px;height:26px">
+          <span class="orb" style="--sz:14px;--blur:2px;width:14px;height:14px"><span class="trail"></span><span class="core"></span></span>
+          <span class="iconlabel">16px</span>
+        </span>
+      </div>
+      <p class="note"><b>the orb alone is the icon.</b> holds its identity from 96px to favicon.
+         sage tile = the accent-forward option for app stores.</p>
+    </div>
+
+    <!-- 06 the living mark -->
+    <div class="slide">
+      <span class="no">06</span>
+      <span class="tag">motion<br>the living mark</span>
+      <div class="lockup breathe">
+        <span class="orb on-black" style="--sz:84px;width:84px;height:84px"><span class="trail"></span><span class="core"></span></span>
+      </div>
+      <p class="note"><b>the mark breathes</b> — slow 5s cycle, trail brightening as it inhales.
+         on the front door this is the only motion on screen; on begin, the orb travels into
+         the page and becomes the idea seed.</p>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>id8 — identity study 02</span>
+    <span>eclipse locked · refine or ship</span>
+  </footer>
+</div>

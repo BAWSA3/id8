@@ -1,0 +1,219 @@
+<title>id8 — calm entry</title>
+<style>
+  :root{
+    --paper:#F3EFE6; --card:#FAF8F2; --ink:#1F1D18; --muted:#85806F;
+    --faint:#B8B2A2; --line:#DDD7C8; --sage:#6B7F5E; --sage-deep:#5F7357;
+    --clay:#B5543B;
+    --mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    --grot:"Helvetica Neue",-apple-system,"Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font-family:var(--grot);background:var(--paper);color:var(--ink);
+       font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+  ::selection{background:var(--sage);color:var(--paper)}
+  button{font:inherit;cursor:pointer}
+
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.38 0 0 0 0 0.28 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E")}
+
+  .crop{position:fixed;width:20px;height:20px;z-index:30;pointer-events:none;opacity:.35}
+  .crop::before,.crop::after{content:"";position:absolute;background:var(--faint)}
+  .crop::before{width:1px;height:100%}.crop::after{height:1px;width:100%}
+  .crop.tl{top:16px;left:16px}.crop.tr{top:16px;right:16px;transform:scaleX(-1)}
+  .crop.bl{bottom:16px;left:16px;transform:scaleY(-1)}.crop.br{bottom:16px;right:16px;transform:scale(-1)}
+  @media(max-width:720px){.crop{display:none}}
+
+  .screen{transition:opacity .7s ease}
+  .screen.hidden{opacity:0;pointer-events:none}
+
+  /* ---------- screen 1: the front door ---------- */
+  .entry{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+         justify-content:center;gap:0;z-index:20}
+  .mark{position:relative;width:76px;height:76px;margin-bottom:34px}
+  .mark .trail{position:absolute;inset:0;border-radius:50%;filter:blur(11px);
+               transform:translateX(-16px) scaleX(1.55);opacity:.32;
+               background:radial-gradient(circle at 62% 50%, var(--ink), transparent 58%);
+               animation:trailbreathe 5s ease-in-out infinite}
+  .mark .mdot{position:absolute;inset:0;border-radius:50%;
+              background:radial-gradient(circle at 40% 38%, var(--ink), var(--ink) 52%, transparent 74%);
+              animation:orbbreathe 5s ease-in-out infinite}
+  @keyframes orbbreathe{0%,100%{transform:scale(.96)}50%{transform:scale(1.03)}}
+  @keyframes trailbreathe{0%,100%{opacity:.32}50%{opacity:.55}}
+  @keyframes breathe{0%,100%{opacity:.5;transform:scale(.88)}50%{opacity:1;transform:scale(1.06)}}
+  @media(prefers-reduced-motion:reduce){.mark .mdot,.mark .trail{animation:none}}
+
+  .entry .wordmark{font-size:56px;letter-spacing:-.02em;margin:0 0 18px;line-height:1;font-weight:700}
+  .entry .wordmark .it{font-style:italic;font-weight:300}
+  .entry .tagline{font-family:var(--mono);font-size:11px;letter-spacing:.26em;
+                  text-transform:uppercase;color:var(--muted);margin:0 0 52px}
+  .begin{border:1px solid var(--line);background:transparent;color:var(--ink);
+         padding:13px 34px;font-family:var(--mono);font-size:11px;letter-spacing:.22em;
+         text-transform:uppercase;transition:all .25s ease}
+  .begin:hover{border-color:var(--sage-deep);color:var(--sage-deep)}
+  .begin:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
+
+  /* the traveling orb — ink at takeoff, sage on landing */
+  .traveler{position:fixed;width:76px;height:76px;border-radius:50%;
+            background:radial-gradient(circle at 40% 38%, var(--ink), var(--ink) 52%, transparent 74%);
+            z-index:50;pointer-events:none;opacity:0;transform-origin:top left;
+            transition:transform .9s cubic-bezier(.4,.1,.2,1), opacity .3s ease .75s}
+  .traveler::after{content:"";position:absolute;inset:32px;border-radius:50%;background:var(--sage);
+                   opacity:0;transition:opacity .5s ease .5s}
+  .traveler.flying::after{opacity:1}
+  @media(prefers-reduced-motion:reduce){
+    .mark .mdot{animation:none}
+    .traveler{transition:none}
+    .screen{transition:none}
+  }
+
+  /* ---------- screen 2: present (the blank page) ---------- */
+  .topbar{display:flex;align-items:baseline;gap:18px;padding:34px 48px 0;
+          max-width:1200px;margin:0 auto}
+  .topbar .wm{font-weight:900;font-size:20px;letter-spacing:-.02em;margin:0;line-height:1;
+              transform:scaleX(1.08);transform-origin:left}
+  .sess{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
+  .phase-whisper{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+                 color:var(--muted);text-transform:uppercase}
+  .phase-whisper b{color:var(--sage-deep);font-weight:400}
+
+  .room{max-width:660px;margin:0 auto;padding:15vh 32px 0;min-height:74vh;
+        display:flex;flex-direction:column}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--muted);
+           text-transform:uppercase;margin:0 0 30px}
+  .eyebrow .dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+                background:var(--sage);margin-right:10px;vertical-align:1px;
+                animation:breathe 4.5s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.eyebrow .dot{animation:none}}
+
+  .prompt{font-size:26px;line-height:1.45;font-weight:500;letter-spacing:-.01em;
+          margin:0 0 38px;color:var(--ink);text-wrap:balance;max-width:20em}
+  .prompt em{font-style:normal;color:var(--sage-deep)}
+
+  .writing{position:relative;min-height:150px;font-size:18px;line-height:1.75;color:var(--ink)}
+  .writing .placeholder{color:var(--faint)}
+  .caret{display:inline-block;width:2px;height:22px;vertical-align:-4px;background:var(--sage);
+         animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media(prefers-reduced-motion:reduce){.caret{animation:none}}
+
+  .gate{border-top:1px solid var(--line);padding-top:16px;display:flex;align-items:center;
+        gap:20px;flex-wrap:wrap}
+  .gate .count{font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+               text-transform:uppercase;color:var(--muted)}
+  .gate .count b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .gate .meter{position:relative;height:1px;width:110px;background:var(--line)}
+  .gate .meter span{position:absolute;left:0;top:0;height:1px;width:0%;background:var(--sage)}
+  .commit{margin-left:auto;border:1px solid var(--line);background:transparent;color:var(--faint);
+          padding:9px 18px;font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;
+          text-transform:uppercase;transition:all .25s ease;cursor:not-allowed}
+  .authorship{margin:14px 0 0;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;
+              text-transform:uppercase;color:var(--faint)}
+  .authorship b{color:var(--muted);font-weight:400}
+
+  .voice{max-width:660px;margin:0 auto;padding:26px 32px 0}
+  .voice p{margin:0;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--muted)}
+  .voice .who{color:var(--sage-deep)}
+
+  .label-plate{position:fixed;right:44px;bottom:36px;text-align:right;
+               font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+               color:var(--faint);text-transform:uppercase;line-height:2}
+  @media(max-width:720px){.label-plate{display:none}}
+</style>
+
+<div class="grain"></div>
+<span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+
+<!-- screen 1: the front door -->
+<div class="screen entry" id="entry">
+  <div class="mark" aria-label="id8 mark — the eclipse">
+    <span class="trail"></span>
+    <span class="mdot" id="markDot"></span>
+  </div>
+  <h1 class="wordmark">id<span class="it">8</span></h1>
+  <p class="tagline">you think · we interrogate</p>
+  <button class="begin" id="begin">[ begin ]</button>
+</div>
+
+<span class="traveler" id="traveler"></span>
+
+<!-- screen 2: present, the blank page -->
+<div class="screen hidden" id="present" aria-hidden="true">
+  <div class="topbar">
+    <h1 class="wm">id<i style="font-style:italic;font-weight:300">8</i></h1>
+    <span class="sess">session 001 · new idea</span>
+    <span class="phase-whisper"><b>present</b> · 01/05</span>
+  </div>
+  <main class="room">
+    <p class="eyebrow"><span class="dot" id="seedDot" style="visibility:hidden"></span>present — the part we can't do for you</p>
+    <h2 class="prompt">What's the idea? Say it like you'd say it out loud — <em>we'll ask the hard questions after.</em></h2>
+    <div class="writing">
+      <span class="placeholder">the page is yours…</span><span class="caret"></span>
+    </div>
+    <div class="gate">
+      <span class="count">words <b>000</b> / 025</span>
+      <span class="meter"><span></span></span>
+      <button class="commit" disabled>[ present idea ]</button>
+    </div>
+    <p class="authorship">authorship: <b>100% human</b> — id8 never writes your idea</p>
+  </main>
+  <div class="voice">
+    <p><span class="who">clarifier ›</span> Present your idea. Raw is fine — polished is not required. I ask questions after, not before.</p>
+  </div>
+</div>
+
+<span class="label-plate">
+  id8 — front door → blank page · direction study<br>
+  the mark: the eclipse · bawsa studio · aug 2026
+</span>
+
+<script>
+(function(){
+  const entry = document.getElementById("entry");
+  const present = document.getElementById("present");
+  const traveler = document.getElementById("traveler");
+  const markDot = document.getElementById("markDot");
+  const seedDot = document.getElementById("seedDot");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let done = false;
+
+  function go(){
+    if (done) return; done = true;
+    if (reduced){
+      entry.classList.add("hidden");
+      present.classList.remove("hidden");
+      present.removeAttribute("aria-hidden");
+      seedDot.style.visibility = "visible";
+      return;
+    }
+    /* measure orb + seed, fly the eclipse between them */
+    const a = markDot.getBoundingClientRect();
+    present.classList.remove("hidden");      /* visible for measurement + crossfade */
+    present.removeAttribute("aria-hidden");
+    const b = seedDot.getBoundingClientRect();
+    present.classList.add("hidden");
+
+    traveler.style.opacity = "1";
+    traveler.style.transform = `translate(${a.left}px, ${a.top}px) scale(1)`;
+    markDot.style.visibility = "hidden";
+    entry.classList.add("hidden");
+
+    const s = b.width / 76;   /* shrink the 76px orb down to the 7px seed */
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      traveler.classList.add("flying");
+      traveler.style.transform = `translate(${b.left}px, ${b.top}px) scale(${s})`;
+    }));
+
+    setTimeout(() => {
+      present.classList.remove("hidden");
+    }, 350);
+    setTimeout(() => {
+      traveler.style.opacity = "0";
+      seedDot.style.visibility = "visible";
+    }, 950);
+  }
+
+  document.getElementById("begin").addEventListener("click", go);
+  addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+})();
+</script>
