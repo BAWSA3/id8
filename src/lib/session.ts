@@ -1,5 +1,5 @@
-/* id8 session model — mock CHALLENGE-phase session used across the instrument.
-   Replace with DB-backed sessions once auth + persistence land. */
+/* id8 session model — types + constellation building from agent output.
+   Client-safe: no server imports. DB-backed sessions land with Supabase. */
 
 export type NodeKind = "core" | "assumption" | "evidence" | "risk";
 export type EdgeKind = "neutral" | "supports" | "contradicts";
@@ -53,106 +53,6 @@ export function sessionSlug(thesis: string): string {
   return s.length > 28 ? s.slice(0, 28) + "…" : s || "untitled";
 }
 
-export const NODES: IdeaNode[] = [
-  {
-    id: "thesis", label: "THESIS", sub: "agent tokens are early",
-    pos: [0, 0, 0], kind: "core",
-    dossier: {
-      title: "Thesis",
-      sub: "typed by hand · authorship 100% human",
-      tag: { label: "core", tone: "lock" },
-      body: [
-        "“AI-agent tokens are still early. Usage is real, the Q1 blow-up scared retail off, and smart money will rotate back before the timeline notices.”",
-      ],
-    },
-  },
-  {
-    id: "a1", label: "A1", sub: "SM accumulating",
-    pos: [-150, -15, -60], kind: "assumption",
-    dossier: {
-      title: "A1 — Smart money accumulating",
-      sub: "assumption · extracted by clarifier",
-      tag: { label: "contested by EV-01", tone: "contested" },
-      body: ["Sector-level flows contradict this. A narrower infra-only version survives."],
-      rows: [{ k: "Sector netflow 30d", v: "−$41.7M", dir: "neg" }],
-    },
-  },
-  {
-    id: "a2", label: "A2", sub: "retail gone",
-    pos: [30, -70, 150], kind: "assumption",
-    dossier: {
-      title: "A2 — Retail attention gone",
-      sub: "assumption · extracted by clarifier",
-      tag: { label: "supported", tone: "ok" },
-      body: ["Social volume −71% from Q1 peak. The crowd has left the sector."],
-      rows: [{ k: "Social volume", v: "−71%", dir: "neg" }],
-    },
-  },
-  {
-    id: "a3", label: "A3", sub: "revised → infra",
-    pos: [155, -25, -45], kind: "assumption",
-    dossier: {
-      title: "A3 — Sector recovers together",
-      sub: "assumption · revised by you",
-      tag: { label: "superseded", tone: "neutral" },
-      body: ["Conceded after EV-01. Narrowed to: infra is early; agent memecoins are exit liquidity."],
-    },
-  },
-  {
-    id: "ev1", label: "EV-01", sub: "nansen netflow",
-    pos: [-235, 55, 60], kind: "evidence",
-    dossier: {
-      title: "EV-01 — Smart money netflow",
-      sub: "nansen smart money · 30d · 14:32 UTC",
-      tag: { label: "contradicts A1", tone: "contested" },
-      body: ["Smart money has been the seller, not the buyer."],
-      rows: [
-        { k: "Sector netflow", v: "−$41.7M", dir: "neg" },
-        { k: "Top-100 wallets", v: "62 ↓", dir: "neg" },
-        { k: "Infra subset", v: "+$8.2M", dir: "pos" },
-      ],
-    },
-  },
-  {
-    id: "ev2", label: "EV-02", sub: "social volume",
-    pos: [-40, 95, 225], kind: "evidence",
-    dossier: {
-      title: "EV-02 — Social volume",
-      sub: "30d vs Q1 peak",
-      tag: { label: "supports A2", tone: "ok" },
-      body: [],
-      rows: [{ k: "Mentions", v: "−71%", dir: "neg" }],
-    },
-  },
-  {
-    id: "risk", label: "RISK", sub: "one-fund flow",
-    pos: [225, 75, 110], kind: "risk",
-    dossier: {
-      title: "RISK — One-fund flow",
-      sub: "open question · raised by skeptic",
-      tag: { label: "unverified", tone: "contested" },
-      body: ["The +$8.2M infra inflow could be a single fund rebalancing. Verify wallet diversity before leaning on it."],
-    },
-  },
-];
-
-export const EDGES: IdeaEdge[] = [
-  { from: "thesis", to: "a1", kind: "neutral" },
-  { from: "thesis", to: "a2", kind: "neutral" },
-  { from: "thesis", to: "a3", kind: "neutral" },
-  { from: "ev1", to: "a1", kind: "contradicts" },
-  { from: "ev2", to: "a2", kind: "supports" },
-  { from: "ev1", to: "a3", kind: "contradicts" },
-  { from: "risk", to: "a3", kind: "contradicts" },
-];
-
-export const FEED: FeedLine[] = [
-  { agent: "clarifier", text: "Your assumptions are on the board. Click one to inspect what it rests on." },
-  { agent: "analyst", text: "Standing by. Evidence cards arrive when the Nansen feed goes live — then your assumptions get tested against the chain." },
-  { agent: "skeptic", text: "Every assumption up there is unverified. Which one would hurt most if it broke?" },
-];
-
-export const nodeById = Object.fromEntries(NODES.map((n) => [n.id, n]));
 
 /* ---------- real sessions: clarifier output → constellation ---------- */
 
@@ -168,13 +68,36 @@ export interface Extraction {
   openQuestions: string[];
 }
 
+/* Client-safe mirror of the analyst's output shape (the agent module is
+   server-only and can't be imported here). */
+export interface EvidenceCard {
+  assumptionIndex: number; // 1-based; 0 = tests the thesis as a whole
+  title: string;
+  source: string;
+  rows: { k: string; v: string; dir: "neg" | "pos" | "neutral" }[];
+  verdict: "supports" | "contradicts" | "inconclusive";
+  note: string;
+}
+
+export interface Challenge {
+  cards: EvidenceCard[];
+  analystLine: string;
+  skepticLine: string;
+  fixture: boolean;
+}
+
 function shortLabel(text: string, words = 3): string {
   return text.trim().split(/\s+/).slice(0, words).join(" ").toLowerCase();
 }
 
-/* Build the constellation from what the Clarifier extracted — every node is
-   the user's own words. Evidence nodes arrive later, with Nansen. */
-export function nodesFromExtraction(thesis: string, ex: Extraction): {
+/* Build the constellation: the Clarifier's extraction (every node the user's
+   own words), plus — once the Analyst has run — evidence cards attached to
+   the assumptions they test. */
+export function nodesFromExtraction(
+  thesis: string,
+  ex: Extraction,
+  challenge?: Challenge | null
+): {
   nodes: IdeaNode[];
   edges: IdeaEdge[];
 } {
@@ -199,9 +122,17 @@ export function nodesFromExtraction(thesis: string, ex: Extraction): {
   const edges: IdeaEdge[] = [];
 
   const n = ex.assumptions.length;
+  const verdictFor = (i1: number): "supports" | "contradicts" | null => {
+    const cards = challenge?.cards.filter((c) => c.assumptionIndex === i1) ?? [];
+    if (cards.some((c) => c.verdict === "contradicts")) return "contradicts";
+    if (cards.some((c) => c.verdict === "supports")) return "supports";
+    return null;
+  };
+
   ex.assumptions.forEach((a, i) => {
     const angle = (i / n) * Math.PI * 2 + 0.5;
     const id = `a${i + 1}`;
+    const verdict = verdictFor(i + 1);
     nodes.push({
       id,
       label: `A${i + 1}`,
@@ -211,11 +142,50 @@ export function nodesFromExtraction(thesis: string, ex: Extraction): {
       dossier: {
         title: `A${i + 1} — ${a.text.slice(0, 48)}${a.text.length > 48 ? "…" : ""}`,
         sub: "assumption · extracted from your words",
-        tag: { label: "unverified", tone: "neutral" },
+        tag:
+          verdict === "contradicts"
+            ? { label: "contested by evidence", tone: "contested" }
+            : verdict === "supports"
+              ? { label: "supported by evidence", tone: "ok" }
+              : { label: "unverified", tone: "neutral" },
         body: [a.text, `from your words: “${a.basis}”`],
       },
     });
     edges.push({ from: "thesis", to: id, kind: "neutral" });
+  });
+
+  challenge?.cards.forEach((c, i) => {
+    const id = `ev${i + 1}`;
+    const targetId = c.assumptionIndex >= 1 && c.assumptionIndex <= n ? `a${c.assumptionIndex}` : "thesis";
+    const baseAngle =
+      c.assumptionIndex >= 1 && c.assumptionIndex <= n
+        ? ((c.assumptionIndex - 1) / n) * Math.PI * 2 + 0.5
+        : 0;
+    const angle = baseAngle + 0.38 + i * 0.07;
+    nodes.push({
+      id,
+      label: `EV-${String(i + 1).padStart(2, "0")}`,
+      sub: shortLabel(c.title),
+      pos: [Math.cos(angle) * 272, (c.assumptionIndex % 2 === 0 ? -1 : 1) * 88, Math.sin(angle) * 272],
+      kind: "evidence",
+      dossier: {
+        title: `EV-${String(i + 1).padStart(2, "0")} — ${c.title}`,
+        sub: `${c.source}${challenge.fixture ? " · FIXTURE DATA" : ""}`,
+        tag:
+          c.verdict === "contradicts"
+            ? { label: `contradicts ${targetId === "thesis" ? "thesis" : targetId.toUpperCase()}`, tone: "contested" }
+            : c.verdict === "supports"
+              ? { label: `supports ${targetId === "thesis" ? "thesis" : targetId.toUpperCase()}`, tone: "ok" }
+              : { label: "inconclusive", tone: "neutral" },
+        body: [c.note],
+        rows: c.rows,
+      },
+    });
+    edges.push({
+      from: id,
+      to: targetId,
+      kind: c.verdict === "contradicts" ? "contradicts" : c.verdict === "supports" ? "supports" : "neutral",
+    });
   });
 
   ex.openQuestions.forEach((q, i) => {

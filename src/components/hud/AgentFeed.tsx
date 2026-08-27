@@ -12,10 +12,16 @@ const AGENT_COLOR: Record<FeedLine["agent"], string> = {
 };
 
 /* Typewriter agent feed — the JARVIS presence, text only. */
-export default function AgentFeed({ lines }: { lines: FeedLine[] }) {
+export default function AgentFeed({
+  lines,
+  extra,
+}: {
+  lines: FeedLine[];
+  extra?: React.ReactNode;
+}) {
   const [li, setLi] = useState(0);
   const [chars, setChars] = useState(0);
-  const line = lines[li];
+  const line = lines[Math.min(li, lines.length - 1)];
 
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -41,6 +47,7 @@ export default function AgentFeed({ lines }: { lines: FeedLine[] }) {
       <p className="m-0 mt-3 border-t border-line pt-2.5 font-mono text-[10px] uppercase tracking-[.16em] text-muted">
         your move — defend, revise, or concede. <b className="font-normal text-lock">id8 will not write this for you.</b>
       </p>
+      {extra}
     </Panel>
   );
 }

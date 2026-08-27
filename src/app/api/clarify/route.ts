@@ -7,13 +7,13 @@ import {
   extract,
   nextQuestion,
 } from "@/lib/agents/clarifier";
+import { rateLimited } from "@/lib/rate-limit";
 
 /* Security posture (anonymous-by-design demo — no auth, no DB):
    - input validation: zod + hard length/turn caps
    - injection: user content wrapped as untrusted in the agent layer
    - output validation: zod-parsed structured output, bounded server-side
-   - cost abuse: per-IP token bucket + global daily ceiling + small max_tokens
-   Best-effort in-memory limits (per warm instance); durable limits come with Supabase. */
+   - cost abuse: shared per-IP token bucket + global daily ceiling + small max_tokens */
 
 const BodySchema = z.object({
   op: z.enum(["question", "extract"]),
@@ -23,33 +23,9 @@ const BodySchema = z.object({
     .max(MAX_QUESTIONS + 1),
 });
 
-const RATE = { windowMs: 60_000, maxPerWindow: 10 };
-const GLOBAL_DAILY_CAP = 500;
-const ipHits = new Map<string, { count: number; reset: number }>();
-let dailyCount = 0;
-let dailyReset = 0;
-
-function limited(ip: string): boolean {
-  const now = Date.now();
-  if (now > dailyReset) {
-    dailyCount = 0;
-    dailyReset = now + 86_400_000;
-  }
-  if (++dailyCount > GLOBAL_DAILY_CAP) return true;
-
-  const entry = ipHits.get(ip);
-  if (!entry || now > entry.reset) {
-    ipHits.set(ip, { count: 1, reset: now + RATE.windowMs });
-    return false;
-  }
-  entry.count += 1;
-  if (ipHits.size > 5000) ipHits.clear();
-  return entry.count > RATE.maxPerWindow;
-}
-
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (limited(ip)) {
+  if (rateLimited("clarify", ip)) {
     return NextResponse.json(
       { error: "rate_limited", message: "The clarifier needs a breather. Try again in a minute." },
       { status: 429 }

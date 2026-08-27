@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FEED, type IdeaEdge, type IdeaNode } from "@/lib/session";
+import type { FeedLine, IdeaEdge, IdeaNode } from "@/lib/session";
 import Constellation from "./Constellation";
 import Panel from "@/components/hud/Panel";
 import PhaseMenu from "@/components/hud/PhaseMenu";
@@ -13,10 +13,16 @@ export default function Cockpit({
   nodes,
   edges,
   activePhase,
+  feed,
+  challengeError = false,
+  onRetryChallenge,
 }: {
   nodes: IdeaNode[];
   edges: IdeaEdge[];
   activePhase: number;
+  feed: FeedLine[];
+  challengeError?: boolean;
+  onRetryChallenge?: () => void;
 }) {
   const [lockedId, setLockedId] = useState<string>("thesis");
   const [yawDeg, setYawDeg] = useState(35);
@@ -38,7 +44,19 @@ export default function Cockpit({
         <span>NODES {String(nodes.length).padStart(2, "0")}</span>
         <span>EV {String(nodes.filter((n) => n.kind === "evidence").length).padStart(2, "0")}</span>
       </Panel>
-      <AgentFeed lines={FEED} />
+      <AgentFeed
+        lines={feed}
+        extra={
+          challengeError && onRetryChallenge ? (
+            <button
+              onClick={onRetryChallenge}
+              className="mt-2 border border-line px-3 py-1.5 font-mono text-[9.5px] uppercase tracking-[.16em] text-muted transition-colors hover:border-ink hover:text-ink"
+            >
+              [ retry analyst ]
+            </button>
+          ) : null
+        }
+      />
       <span className="stage-hint absolute bottom-3 left-1/2 z-[15] -translate-x-1/2 whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[.18em] text-faint">
         drag to rotate · scroll to zoom · click a node to lock
       </span>

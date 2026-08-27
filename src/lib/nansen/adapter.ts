@@ -19,6 +19,8 @@ export interface SocialVolume {
 }
 
 export interface NansenAdapter {
+  /* true while serving fixtures — surfaces as "fixture data" labels in the UI */
+  readonly isMock: boolean;
   smartMoneyNetflow(sector: string, windowDays: number): Promise<SmartMoneyNetflow>;
   socialVolume(sector: string): Promise<SocialVolume>;
 }
@@ -26,6 +28,8 @@ export interface NansenAdapter {
 /* Fixture data — realistic shapes for demo + development.
    Also the fallback if the live API wobbles during judging (always labeled, never silent). */
 export class MockNansenAdapter implements NansenAdapter {
+  readonly isMock = true;
+
   async smartMoneyNetflow(sector: string, windowDays: number): Promise<SmartMoneyNetflow> {
     return {
       sector,
