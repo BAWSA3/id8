@@ -12,6 +12,7 @@ import Horizon from "@/components/hud/Horizon";
 
 interface Props {
   thesis: string;
+  ticker?: string | null;
   qa: QA[];
   extraction: Extraction | null;
   onQA: (qa: QA[]) => void;
@@ -27,18 +28,18 @@ const DESK_C2 = "structured from your words, nothing added. read it like a contr
 
 type Status = "asking" | "thinking" | "extracting" | "review" | "error";
 
-async function callClarify(op: "question" | "extract", thesis: string, qa: QA[]) {
+async function callClarify(op: "question" | "extract", thesis: string, qa: QA[], ticker?: string | null) {
   const res = await fetch("/api/clarify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ op, thesis, qa }),
+    body: JSON.stringify({ op, thesis, qa, ...(ticker ? { ticker } : {}) }),
   });
   const data = await res.json();
   if (!res.ok || data.error) throw new Error(data.message ?? "The clarifier hit a snag.");
   return data;
 }
 
-export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onContinue, tour = false, onSkipTour }: Props) {
+export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, onExtracted, onContinue, tour = false, onSkipTour }: Props) {
   const [status, setStatus] = useState<Status>(extraction ? "review" : "thinking");
   const [question, setQuestion] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
@@ -51,13 +52,13 @@ export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onC
       busy.current = true;
       setStatus("thinking");
       try {
-        const next = await callClarify("question", thesis, currentQA);
+        const next = await callClarify("question", thesis, currentQA, ticker);
         if (!next.done) {
           setQuestion(next.question);
           setStatus("asking");
         } else {
           setStatus("extracting");
-          const { extraction: ex } = await callClarify("extract", thesis, currentQA);
+          const { extraction: ex } = await callClarify("extract", thesis, currentQA, ticker);
           onExtracted(ex);
           setStatus("review");
         }
@@ -68,7 +69,7 @@ export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onC
         busy.current = false;
       }
     },
-    [thesis, onExtracted]
+    [thesis, ticker, onExtracted]
   );
 
   useEffect(() => {

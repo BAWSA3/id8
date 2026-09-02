@@ -33,12 +33,14 @@ export default function Present({
   value,
   onChange,
   onCommit,
+  ticker = null,
   tour = false,
   onSkipTour,
 }: {
   value: string;
   onChange: (v: string) => void;
   onCommit: () => void;
+  ticker?: string | null;
   tour?: boolean;
   onSkipTour?: () => void;
 }) {
@@ -62,7 +64,14 @@ export default function Present({
           present — the part we can&apos;t do for you
         </p>
         <h2 className="m-0 mb-[38px] max-w-[20em] text-[26px] font-medium leading-[1.45] tracking-[-.01em] [text-wrap:balance]">
-          What&apos;s the play? The narrative, the vehicle, why now —{" "}
+          {ticker ? (
+            <>
+              What&apos;s the play on <span className="font-mono text-lock-deep">${ticker}</span>? The narrative, the
+              timing, why now —{" "}
+            </>
+          ) : (
+            <>What&apos;s the play? The narrative, the vehicle, why now — </>
+          )}
           <em className="not-italic text-lock-deep">we&apos;ll ask the hard questions after.</em>
         </h2>
 

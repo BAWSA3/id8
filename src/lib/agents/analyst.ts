@@ -109,13 +109,19 @@ async function gatherEvidence(adapter: NansenAdapter, plan: EvidencePlan): Promi
   return (await Promise.all(jobs)).filter((d): d is Dataset => d !== null);
 }
 
-export async function runChallenge(thesis: string, extraction: Extraction): Promise<Challenge> {
+export async function runChallenge(thesis: string, extraction: Extraction, ticker?: string): Promise<Challenge> {
   let adapter = getNansenAdapter();
   const plan = await planEvidence(
     thesis,
     extraction.claim,
     extraction.assumptions.map((a) => a.text)
   );
+  /* the vehicle named at the door is a guaranteed symbol — seed it first */
+  if (ticker) {
+    const t = ticker.replace(/^\$/, "").toUpperCase();
+    plan.symbols = [t, ...plan.symbols.filter((s) => s !== t)].slice(0, 2);
+    plan.cryptoRelevant = true;
+  }
 
   let datasets: Dataset[] = [];
   if (plan.cryptoRelevant) {

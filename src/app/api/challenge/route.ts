@@ -10,6 +10,10 @@ import { rateLimited } from "@/lib/rate-limit";
 
 const BodySchema = z.object({
   thesis: z.string().min(10).max(2000),
+  ticker: z
+    .string()
+    .regex(/^[A-Za-z0-9$._-]{1,15}$/)
+    .optional(),
   extraction: z.object({
     claim: z.string().min(1).max(600),
     audience: z.string().max(300),
@@ -41,7 +45,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const challenge = await runChallenge(body.thesis, body.extraction);
+    const challenge = await runChallenge(body.thesis, body.extraction, body.ticker);
     return NextResponse.json({ challenge });
   } catch (err) {
     if (err instanceof AnalystRefusal) {

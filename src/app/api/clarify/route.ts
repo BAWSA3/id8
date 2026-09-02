@@ -18,6 +18,10 @@ import { rateLimited } from "@/lib/rate-limit";
 const BodySchema = z.object({
   op: z.enum(["question", "extract"]),
   thesis: z.string().min(10).max(2000),
+  ticker: z
+    .string()
+    .regex(/^[A-Za-z0-9$._-]{1,15}$/)
+    .optional(),
   qa: z
     .array(z.object({ q: z.string().min(1).max(500), a: z.string().min(1).max(1500) }))
     .max(MAX_QUESTIONS + 1),
@@ -44,10 +48,10 @@ export async function POST(req: Request) {
 
   try {
     if (body.op === "question") {
-      const result = await nextQuestion(body.thesis, body.qa);
+      const result = await nextQuestion(body.thesis, body.qa, body.ticker);
       return NextResponse.json(result);
     }
-    const extraction = await extract(body.thesis, body.qa);
+    const extraction = await extract(body.thesis, body.qa, body.ticker);
     return NextResponse.json({ extraction });
   } catch (err) {
     if (err instanceof ClarifierRefusal) {

@@ -13,6 +13,7 @@ import {
 } from "@/lib/session";
 import TopBar from "@/components/hud/TopBar";
 import FrontDoor from "./FrontDoor";
+import TickerGate from "./TickerGate";
 import Present from "./Present";
 import Clarify from "./Clarify";
 import Cockpit from "./Cockpit";
@@ -31,12 +32,15 @@ interface Stored {
   qa: QA[];
   extraction: Extraction | null;
   challenge: Challenge | null;
+  /* the named vehicle: string = ticker, null = narrative play, absent = not asked */
+  ticker?: string | null;
 }
 
 export default function Session() {
   const [door, setDoor] = useState(true);
   const [stage, setStage] = useState<Stage>("present");
   const [thesis, setThesis] = useState("");
+  const [ticker, setTicker] = useState<string | null | undefined>(undefined);
   const [qa, setQA] = useState<QA[]>([]);
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -62,6 +66,8 @@ export default function Session() {
         if (raw) {
           const s: Stored = JSON.parse(raw);
           if (typeof s.thesis === "string") setThesis(s.thesis);
+          if (typeof s.ticker === "string" || s.ticker === null) setTicker(s.ticker);
+          else if (typeof s.thesis === "string" && s.thesis.trim()) setTicker(null); // pre-gate session: don't re-ask
           if (Array.isArray(s.qa)) setQA(s.qa);
           if (s.extraction) setExtraction(s.extraction);
           if (s.challenge) {
@@ -84,9 +90,9 @@ export default function Session() {
     if (!hydrated) return;
     localStorage.setItem(
       STORE_KEY,
-      JSON.stringify({ thesis, stage, qa, extraction, challenge } satisfies Stored)
+      JSON.stringify({ thesis, stage, qa, extraction, challenge, ticker } satisfies Stored)
     );
-  }, [thesis, stage, qa, extraction, challenge, hydrated]);
+  }, [thesis, stage, qa, extraction, challenge, ticker, hydrated]);
 
   const fetchChallenge = useCallback(async () => {
     if (fetching.current || !extraction) return;
@@ -96,7 +102,7 @@ export default function Session() {
       const res = await fetch("/api/challenge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thesis, extraction }),
+        body: JSON.stringify({ thesis, extraction, ...(ticker ? { ticker } : {}) }),
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.message ?? "analyst error");
@@ -107,7 +113,7 @@ export default function Session() {
     } finally {
       fetching.current = false;
     }
-  }, [thesis, extraction]);
+  }, [thesis, extraction, ticker]);
 
   useEffect(() => {
     if (stage === "cockpit" && hydrated && extraction && !challenge && challengeStatus === "idle") {
@@ -141,6 +147,7 @@ export default function Session() {
   const reset = () => {
     setStage("present");
     setThesis("");
+    setTicker(undefined);
     setQA([]);
     setExtraction(null);
     setChallenge(null);
@@ -155,8 +162,13 @@ export default function Session() {
     }
   };
 
-  const label =
-    stage === "present" ? "session 001 · new play" : `session 001 · ${sessionSlug(thesis)}`;
+  const label = ticker
+    ? `session 001 · $${ticker}`
+    : stage === "present"
+      ? "session 001 · new play"
+      : `session 001 · ${sessionSlug(thesis)}`;
+
+  const gate = stage === "present" && ticker === undefined;
 
   return (
     <>
@@ -165,11 +177,20 @@ export default function Session() {
         phase={PHASE_INDEX[stage]}
         onReset={stage !== "present" ? reset : undefined}
       />
-      {stage === "present" && (
+      {gate && (
+        <TickerGate
+          onDone={(t) => {
+            setTicker(t ?? null);
+            setTimeout(() => document.getElementById("id8-input")?.focus(), 80);
+          }}
+        />
+      )}
+      {stage === "present" && !gate && (
         <Present
           value={thesis}
           onChange={setThesis}
           onCommit={() => setStage("clarify")}
+          ticker={ticker ?? null}
           tour={tour}
           onSkipTour={endTour}
         />
@@ -177,6 +198,7 @@ export default function Session() {
       {stage === "clarify" && (
         <Clarify
           thesis={thesis}
+          ticker={ticker ?? null}
           qa={qa}
           extraction={extraction}
           onQA={setQA}

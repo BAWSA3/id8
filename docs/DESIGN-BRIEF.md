@@ -172,3 +172,16 @@ floor-line, drifting on a 36s breath (still under reduced-motion).
 Pure atmosphere — it never carries content. The cockpit keeps its own
 board and does not use it. Rule: whisper volume; if a screenshot makes
 you notice it first, it's too loud.
+
+## The opening window (locked 2026-09-02)
+
+After the door, the desk asks one question in a pixel-box dialog:
+"the desk › what are we looking at?" — a $TICKER field, [ check ], and a
+quiet hatch: "[ trading a narrative, not a name ]". The eclipse's travel
+lands on the seed inside this window. On [ check ] the desk resolves the
+ticker against the live tape and acknowledges it ("found · chain · mcap ·
+● live", exact figures) before advancing. The ticker becomes the session's
+name ($EIGEN), rewrites Present's headline ("what's the play on $EIGEN?"),
+briefs the clarifier (never asks WHAT the vehicle is — only WHY), and
+seeds the analyst's evidence plan. Sector and narrative plays stay
+first-class through the hatch.
