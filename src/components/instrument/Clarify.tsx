@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Extraction, QA } from "@/lib/session";
 import TypeLine from "@/components/hud/TypeLine";
+import DeskCaption from "@/components/hud/DeskCaption";
 
 interface Props {
   thesis: string;
@@ -15,7 +16,13 @@ interface Props {
   onQA: (qa: QA[]) => void;
   onExtracted: (ex: Extraction) => void;
   onContinue: () => void;
+  tour?: boolean;
+  onSkipTour?: () => void;
 }
+
+/* Desk captions for the first-visit tour */
+const DESK_C1 = "the clarifier goes first. answer plainly, in your own words — ⌘↵ sends.";
+const DESK_C2 = "structured from your words, nothing added. read it like a contract, then take it to the board.";
 
 type Status = "asking" | "thinking" | "extracting" | "review" | "error";
 
@@ -30,7 +37,7 @@ async function callClarify(op: "question" | "extract", thesis: string, qa: QA[])
   return data;
 }
 
-export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onContinue }: Props) {
+export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onContinue, tour = false, onSkipTour }: Props) {
   const [status, setStatus] = useState<Status>(extraction ? "review" : "thinking");
   const [question, setQuestion] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
@@ -213,6 +220,10 @@ export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onC
             [ take it to the board ]
           </button>
         </div>
+      )}
+
+      {tour && onSkipTour && (
+        <DeskCaption text={status === "review" ? DESK_C2 : DESK_C1} onSkip={onSkipTour} />
       )}
     </main>
   );

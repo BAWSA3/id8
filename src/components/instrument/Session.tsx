@@ -5,6 +5,7 @@ import {
   nodesFromExtraction,
   sessionSlug,
   SESSION_STORE_KEY as STORE_KEY,
+  TOUR_SEEN_KEY,
   type Challenge,
   type Extraction,
   type FeedLine,
@@ -41,12 +42,23 @@ export default function Session() {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [challengeStatus, setChallengeStatus] = useState<ChallengeStatus>("idle");
   const [hydrated, setHydrated] = useState(false);
+  /* first visit only: the desk teaches while it builds itself */
+  const [tour, setTour] = useState(false);
   const fetching = useRef(false);
+
+  const endTour = useCallback(() => {
+    setTour(false);
+    try {
+      localStorage.setItem(TOUR_SEEN_KEY, "1");
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => {
       try {
+        const seen = !!localStorage.getItem(TOUR_SEEN_KEY);
         const raw = localStorage.getItem(STORE_KEY);
+        if (!seen && !raw) setTour(true);
         if (raw) {
           const s: Stored = JSON.parse(raw);
           if (typeof s.thesis === "string") setThesis(s.thesis);
@@ -154,7 +166,13 @@ export default function Session() {
         onReset={stage !== "present" ? reset : undefined}
       />
       {stage === "present" && (
-        <Present value={thesis} onChange={setThesis} onCommit={() => setStage("clarify")} />
+        <Present
+          value={thesis}
+          onChange={setThesis}
+          onCommit={() => setStage("clarify")}
+          tour={tour}
+          onSkipTour={endTour}
+        />
       )}
       {stage === "clarify" && (
         <Clarify
@@ -164,6 +182,8 @@ export default function Session() {
           onQA={setQA}
           onExtracted={setExtraction}
           onContinue={() => setStage("cockpit")}
+          tour={tour}
+          onSkipTour={endTour}
         />
       )}
       {stage === "cockpit" && graph && (
@@ -174,6 +194,8 @@ export default function Session() {
           feed={feed}
           challengeError={challengeStatus === "error"}
           onRetryChallenge={fetchChallenge}
+          tour={tour}
+          onTourDone={endTour}
         />
       )}
       {door && <FrontDoor onDone={enter} />}

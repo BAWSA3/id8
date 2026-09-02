@@ -7,6 +7,7 @@
 import { useMemo } from "react";
 import { MIN_WORDS, countWords } from "@/lib/session";
 import TypeLine from "@/components/hud/TypeLine";
+import DeskCaption from "@/components/hud/DeskCaption";
 
 const CLARIFIER_TIERS = [
   "Present your play. Raw is fine — polished is not required. I ask questions after, not before.",
@@ -22,19 +23,34 @@ function gateTier(words: number): number {
   return 3;
 }
 
+/* Desk captions for the first-visit tour — the page assembles as you write */
+const DESK_P1 = "this is the desk. one page, one thesis. the agents wake when you write.";
+const DESK_P2 = "twenty-five words is the floor. half-formed is fine — vague is not.";
+const DESK_P3 = "the gate is open. everything on this page stays yours — id8 never writes the thesis.";
+
 export default function Present({
   value,
   onChange,
   onCommit,
+  tour = false,
+  onSkipTour,
 }: {
   value: string;
   onChange: (v: string) => void;
   onCommit: () => void;
+  tour?: boolean;
+  onSkipTour?: () => void;
 }) {
   const words = countWords(value);
   const gateOpen = words >= MIN_WORDS;
   const tier = gateTier(words);
   const line = useMemo(() => CLARIFIER_TIERS[tier], [tier]);
+
+  /* tour build: the gate row appears at the first word, the authorship line
+     when the gate opens; outside the tour everything is furnished at once */
+  const showGate = !tour || words > 0;
+  const showAuthorship = !tour || gateOpen;
+  const caption = words === 0 ? DESK_P1 : gateOpen ? DESK_P3 : DESK_P2;
 
   return (
     <>
@@ -60,7 +76,9 @@ export default function Present({
           aria-label="Your play"
         />
 
-        <div className="flex flex-wrap items-center gap-5 border-t border-line pt-4">
+        <div
+          className={`flex flex-wrap items-center gap-5 border-t border-line pt-4 transition-opacity duration-700 ${showGate ? "opacity-100" : "opacity-0"}`}
+        >
           <span className="font-mono text-[10px] uppercase tracking-[.16em] text-muted">
             words{" "}
             <b className={`font-semibold tabular-nums ${gateOpen ? "text-good" : "text-ink"}`}>
@@ -86,14 +104,20 @@ export default function Present({
             [ present the play ]
           </button>
         </div>
-        <p className="m-0 mt-3.5 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
+        <p
+          className={`m-0 mt-3.5 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-opacity duration-700 ${showAuthorship ? "opacity-100" : "opacity-0"}`}
+        >
           authorship: <b className="font-normal text-muted">100% human</b> — id8 never writes your thesis
         </p>
       </main>
 
-      <div className="mx-auto w-full max-w-[660px] px-8 pt-6">
-        <TypeLine key={line} prefix="clarifier" prefixClass="text-lock-deep" text={line} />
-      </div>
+      {(!tour || words > 0) && (
+        <div className="mx-auto w-full max-w-[660px] px-8 pt-6">
+          <TypeLine key={line} prefix="clarifier" prefixClass="text-lock-deep" text={line} />
+        </div>
+      )}
+
+      {tour && onSkipTour && <DeskCaption text={caption} onSkip={onSkipTour} />}
     </>
   );
 }

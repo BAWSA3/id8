@@ -46,7 +46,7 @@ export const MIN_WORDS = 25;
 
 /* localStorage keys — shared by Session (persistence) and FrontDoor (resume detection) */
 export const SESSION_STORE_KEY = "id8.session.v3";
-export const GHOST_SEEN_KEY = "id8.ghost.v1";
+export const TOUR_SEEN_KEY = "id8.tour.v1";
 
 export function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
