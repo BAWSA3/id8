@@ -5,6 +5,7 @@
    (element #id8-seed rendered by Present beneath this overlay). */
 
 import { useEffect, useRef, useState } from "react";
+import GhostSession from "@/components/instrument/GhostSession";
 
 /* Boot readout — the door's whisper layer. Doubles as the only product
    explanation a cold visitor gets: live feed, real coverage, the hard rule. */
@@ -60,6 +61,7 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
   const orbRef = useRef<HTMLSpanElement>(null);
   const travelerRef = useRef<HTMLSpanElement>(null);
   const [leaving, setLeaving] = useState(false);
+  const [ghost, setGhost] = useState(false);
   const started = useRef(false);
 
   function begin() {
@@ -116,8 +118,24 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
         >
           [ begin ]
         </button>
+        <button
+          onClick={() => setGhost(true)}
+          className="mt-[18px] border-0 bg-transparent font-mono text-[9.5px] uppercase tracking-[.2em] text-faint transition-colors hover:text-muted"
+        >
+          [ watch a session ]
+        </button>
         <BootReadout />
       </div>
+
+      {ghost && (
+        <GhostSession
+          onClose={() => setGhost(false)}
+          onBegin={() => {
+            setGhost(false);
+            begin();
+          }}
+        />
+      )}
 
       {/* the traveling eclipse — ink at takeoff, sage on landing */}
       <span
