@@ -5,7 +5,7 @@ import { ImageResponse } from "next/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "id8 — your thesis · the chain pushes back";
+export const alt = "id8 — a canvas for your thesis";
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -55,7 +55,7 @@ export default function OpengraphImage() {
             color: "#8b8678",
           }}
         >
-          YOUR THESIS · THE CHAIN PUSHES BACK
+          A CANVAS FOR YOUR THESIS
         </div>
       </div>
     ),

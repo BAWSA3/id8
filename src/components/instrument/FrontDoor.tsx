@@ -119,7 +119,7 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
           id<i className="font-light italic">8</i>
         </h1>
         <p className="door-in m-0 mb-[52px] font-mono text-[11px] uppercase tracking-[.26em] text-muted" style={{ animationDelay: "0.42s" }}>
-          your thesis · the chain pushes back
+          a canvas for your thesis
         </p>
         <button
           onClick={begin}

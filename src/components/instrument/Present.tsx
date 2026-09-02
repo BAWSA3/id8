@@ -45,7 +45,7 @@ export default function Present({
         </p>
         <h2 className="m-0 mb-[38px] max-w-[20em] text-[26px] font-medium leading-[1.45] tracking-[-.01em] [text-wrap:balance]">
           What&apos;s the play? The narrative, the vehicle, why now —{" "}
-          <em className="not-italic text-lock-deep">the chain pushes back after.</em>
+          <em className="not-italic text-lock-deep">we&apos;ll ask the hard questions after.</em>
         </h2>
 
         <textarea
