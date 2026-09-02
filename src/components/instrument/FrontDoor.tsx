@@ -4,7 +4,57 @@
    On begin, the orb travels into the page and lands as the idea seed
    (element #id8-seed rendered by Present beneath this overlay). */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+/* Boot readout — the door's whisper layer. Doubles as the only product
+   explanation a cold visitor gets: live feed, real coverage, the hard rule. */
+const BOOT_LINES: { k: string; v: string; live?: boolean }[] = [
+  { k: "booting", v: "thesis desk" },
+  { k: "nansen smart money", v: "live", live: true },
+  { k: "sectors tracked", v: "29" },
+  { k: "holder cohorts", v: "whales · smart · fresh" },
+  { k: "writes your trade", v: "never" },
+];
+const BOOT_START_MS = 350;
+const BOOT_STEP_MS = 280;
+
+function BootReadout() {
+  const [shown, setShown] = useState(0);
+
+  useEffect(() => {
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = performance.now();
+    const t = setInterval(() => {
+      const n = reduced
+        ? BOOT_LINES.length
+        : Math.min(
+            BOOT_LINES.length,
+            Math.max(0, Math.floor((performance.now() - start - BOOT_START_MS) / BOOT_STEP_MS) + 1)
+          );
+      setShown(n);
+      if (n >= BOOT_LINES.length) clearInterval(t);
+    }, 90);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div
+      aria-hidden="true"
+      className="fixed bottom-10 left-10 z-[61] hidden w-[300px] flex-col gap-[7px] font-mono text-[9.5px] uppercase tracking-[.14em] sm:flex"
+    >
+      {BOOT_LINES.map((l, i) => (
+        <div
+          key={l.k}
+          className={`flex items-baseline gap-2 transition-opacity duration-300 ${i < shown ? "opacity-100" : "opacity-0"}`}
+        >
+          <span className="text-faint">{l.k}</span>
+          <span className="min-w-4 flex-1 border-b border-dotted border-line" />
+          <span className={l.live ? "text-lock" : "text-muted"}>{l.v}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function FrontDoor({ onDone }: { onDone: () => void }) {
   const orbRef = useRef<HTMLSpanElement>(null);
@@ -58,7 +108,7 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
           id<i className="font-light italic">8</i>
         </h1>
         <p className="m-0 mb-[52px] font-mono text-[11px] uppercase tracking-[.26em] text-muted">
-          you think · we interrogate
+          your thesis · the chain pushes back
         </p>
         <button
           onClick={begin}
@@ -66,6 +116,7 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
         >
           [ begin ]
         </button>
+        <BootReadout />
       </div>
 
       {/* the traveling eclipse — ink at takeoff, sage on landing */}
