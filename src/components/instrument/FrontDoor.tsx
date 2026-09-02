@@ -16,7 +16,7 @@ const BOOT_LINES: { k: string; v: string; live?: boolean }[] = [
   { k: "holder cohorts", v: "whales · smart · fresh" },
   { k: "writes your trade", v: "never" },
 ];
-const BOOT_START_MS = 350;
+const BOOT_START_MS = 950; /* after the center's curtain-up settles */
 const BOOT_STEP_MS = 280;
 
 function BootReadout() {
@@ -50,7 +50,10 @@ function BootReadout() {
         >
           <span className="text-faint">{l.k}</span>
           <span className="min-w-4 flex-1 border-b border-dotted border-line" />
-          <span className={l.live ? "text-lock" : "text-muted"}>{l.v}</span>
+          <span className={l.live ? "text-lock" : "text-muted"}>
+            {l.live && <span className="seed mr-1.5 inline-block align-[1px]" style={{ width: 5, height: 5 }} />}
+            {l.v}
+          </span>
         </div>
       ))}
     </div>
@@ -62,6 +65,7 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
   const travelerRef = useRef<HTMLSpanElement>(null);
   const [leaving, setLeaving] = useState(false);
   const [ghost, setGhost] = useState(false);
+  const [primed, setPrimed] = useState(false);
   const started = useRef(false);
 
   function begin() {
@@ -102,25 +106,36 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
       <div
         className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-bg transition-opacity duration-700 ${leaving ? "pointer-events-none opacity-0" : "opacity-100"}`}
       >
-        <span ref={orbRef} className="orb breathing mb-[34px] size-[76px]" aria-label="id8 — the eclipse">
+        <span
+          ref={orbRef}
+          className={`orb breathing door-in mb-[34px] size-[76px] ${primed ? "primed" : ""}`}
+          style={{ animationDelay: "0.05s" }}
+          aria-label="id8 — the eclipse"
+        >
           <span className="orb-trail" />
           <span className="orb-core" />
         </span>
-        <h1 className="m-0 mb-[18px] text-[56px] font-bold leading-none tracking-[-.02em]">
+        <h1 className="door-in m-0 mb-[18px] text-[56px] font-bold leading-none tracking-[-.02em]" style={{ animationDelay: "0.24s" }}>
           id<i className="font-light italic">8</i>
         </h1>
-        <p className="m-0 mb-[52px] font-mono text-[11px] uppercase tracking-[.26em] text-muted">
+        <p className="door-in m-0 mb-[52px] font-mono text-[11px] uppercase tracking-[.26em] text-muted" style={{ animationDelay: "0.42s" }}>
           your thesis · the chain pushes back
         </p>
         <button
           onClick={begin}
-          className="border border-line bg-transparent px-[34px] py-[13px] font-mono text-[11px] uppercase tracking-[.22em] text-ink transition-colors hover:border-lock-deep hover:text-lock-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
+          onMouseEnter={() => setPrimed(true)}
+          onMouseLeave={() => setPrimed(false)}
+          onFocus={() => setPrimed(true)}
+          onBlur={() => setPrimed(false)}
+          className="door-in border border-line bg-transparent px-[34px] py-[13px] font-mono text-[11px] uppercase tracking-[.22em] text-ink transition-colors hover:border-lock-deep hover:text-lock-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
+          style={{ animationDelay: "0.6s" }}
         >
           [ begin ]
         </button>
         <button
           onClick={() => setGhost(true)}
-          className="mt-[18px] border-0 bg-transparent font-mono text-[9.5px] uppercase tracking-[.2em] text-faint transition-colors hover:text-muted"
+          className="door-in mt-[18px] border-0 bg-transparent font-mono text-[9.5px] uppercase tracking-[.2em] text-faint transition-colors hover:text-muted focus-visible:text-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
+          style={{ animationDelay: "0.74s" }}
         >
           [ watch a session ]
         </button>

@@ -106,6 +106,12 @@ export default function GhostSession({
 }) {
   const [elapsed, setElapsed] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const skipRef = useRef<HTMLButtonElement>(null);
+
+  /* move keyboard/screen-reader focus into the dialog on open */
+  useEffect(() => {
+    skipRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -133,14 +139,20 @@ export default function GhostSession({
   }, [steps.length, done]);
 
   return (
-    <div className="fixed inset-0 z-[80] flex flex-col bg-bg">
+    <div
+      className="fixed inset-0 z-[80] flex flex-col bg-bg"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Ghost session — a real interrogation, replayed"
+    >
       <div className="flex items-baseline justify-between gap-4 border-b border-line px-8 py-4">
         <p className="m-0 font-mono text-[9.5px] uppercase tracking-[.18em] text-muted">
-          ghost session <span className="text-faint">— a real interrogation, replayed · not your session · nansen data · sep 2026</span>
+          ghost session <span className="text-faint">— a real interrogation, replayed<span className="hidden sm:inline"> · not your session · nansen data · sep 2026</span></span>
         </p>
         <button
+          ref={skipRef}
           onClick={onClose}
-          className="border-0 bg-transparent font-mono text-[9.5px] uppercase tracking-[.18em] text-faint transition-colors hover:text-ink"
+          className="shrink-0 whitespace-nowrap border-0 bg-transparent font-mono text-[9.5px] uppercase tracking-[.18em] text-faint transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
         >
           [ skip ]
         </button>
