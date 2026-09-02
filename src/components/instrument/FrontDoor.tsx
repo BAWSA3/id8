@@ -75,8 +75,9 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
       try {
         const raw = localStorage.getItem(SESSION_STORE_KEY);
         if (raw) {
-          const s = JSON.parse(raw) as { thesis?: string };
-          if (s?.thesis) setResumeSlug(sessionSlug(s.thesis));
+          const s = JSON.parse(raw) as { thesis?: string; ticker?: string | null };
+          if (s?.ticker) setResumeSlug(`$${s.ticker}`);
+          else if (s?.thesis) setResumeSlug(sessionSlug(s.thesis));
         }
       } catch {
         /* no storage — fresh visit */

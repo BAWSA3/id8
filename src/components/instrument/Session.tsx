@@ -23,6 +23,7 @@ import Cockpit from "./Cockpit";
 
 
 type Stage = "present" | "clarify" | "cockpit";
+type View = Stage | "gate";
 type ChallengeStatus = "idle" | "loading" | "ready" | "error";
 const PHASE_INDEX: Record<Stage, number> = { present: 0, clarify: 1, cockpit: 2 };
 
@@ -169,6 +170,28 @@ export default function Session() {
       : `session 001 · ${sessionSlug(thesis)}`;
 
   const gate = stage === "present" && ticker === undefined;
+  const view: View = gate ? "gate" : stage;
+
+  /* soft phase transitions: the outgoing view exhales, then the next fades in */
+  const [shownView, setShownView] = useState<View>(view);
+  const [phaseOut, setPhaseOut] = useState(false);
+  useEffect(() => {
+    if (view === shownView) return;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = setTimeout(() => setPhaseOut(!reduced), 0);
+    const swap = setTimeout(
+      () => {
+        setShownView(view);
+        setPhaseOut(false);
+        window.scrollTo(0, 0);
+      },
+      reduced ? 0 : 280
+    );
+    return () => {
+      clearTimeout(start);
+      clearTimeout(swap);
+    };
+  }, [view, shownView]);
 
   return (
     <>
@@ -177,49 +200,51 @@ export default function Session() {
         phase={PHASE_INDEX[stage]}
         onReset={stage !== "present" ? reset : undefined}
       />
-      {gate && (
-        <TickerGate
-          onDone={(t) => {
-            setTicker(t ?? null);
-            setTimeout(() => document.getElementById("id8-input")?.focus(), 80);
-          }}
-        />
-      )}
-      {stage === "present" && !gate && (
-        <Present
-          value={thesis}
-          onChange={setThesis}
-          onCommit={() => setStage("clarify")}
-          ticker={ticker ?? null}
-          tour={tour}
-          onSkipTour={endTour}
-        />
-      )}
-      {stage === "clarify" && (
-        <Clarify
-          thesis={thesis}
-          ticker={ticker ?? null}
-          qa={qa}
-          extraction={extraction}
-          onQA={setQA}
-          onExtracted={setExtraction}
-          onContinue={() => setStage("cockpit")}
-          tour={tour}
-          onSkipTour={endTour}
-        />
-      )}
-      {stage === "cockpit" && graph && (
-        <Cockpit
-          nodes={graph.nodes}
-          edges={graph.edges}
-          activePhase={2}
-          feed={feed}
-          challengeError={challengeStatus === "error"}
-          onRetryChallenge={fetchChallenge}
-          tour={tour}
-          onTourDone={endTour}
-        />
-      )}
+      <div key={shownView} className={phaseOut ? "phase-out" : "phase-in"}>
+        {shownView === "gate" && (
+          <TickerGate
+            onDone={(t) => {
+              setTicker(t ?? null);
+              setTimeout(() => document.getElementById("id8-input")?.focus(), 520);
+            }}
+          />
+        )}
+        {shownView === "present" && (
+          <Present
+            value={thesis}
+            onChange={setThesis}
+            onCommit={() => setStage("clarify")}
+            ticker={ticker ?? null}
+            tour={tour}
+            onSkipTour={endTour}
+          />
+        )}
+        {shownView === "clarify" && (
+          <Clarify
+            thesis={thesis}
+            ticker={ticker ?? null}
+            qa={qa}
+            extraction={extraction}
+            onQA={setQA}
+            onExtracted={setExtraction}
+            onContinue={() => setStage("cockpit")}
+            tour={tour}
+            onSkipTour={endTour}
+          />
+        )}
+        {shownView === "cockpit" && graph && (
+          <Cockpit
+            nodes={graph.nodes}
+            edges={graph.edges}
+            activePhase={2}
+            feed={feed}
+            challengeError={challengeStatus === "error"}
+            onRetryChallenge={fetchChallenge}
+            tour={tour}
+            onTourDone={endTour}
+          />
+        )}
+      </div>
       {door && <FrontDoor onDone={enter} />}
     </>
   );

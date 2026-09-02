@@ -169,6 +169,13 @@ button { font: inherit; cursor: pointer; }
 @keyframes orbbreathe { 0%, 100% { transform: scale(0.96); } 50% { transform: scale(1.03); } }
 @keyframes trailbreathe { 0%, 100% { opacity: 0.32; } 50% { opacity: 0.55; } }
 
+/* phase transitions — the room exhales between phases; opacity only so
+   fixed layers (horizon, captions) keep their positioning */
+.phase-in { animation: phasein 0.45s ease-out both; }
+.phase-out { animation: phaseout 0.28s ease-in both; }
+@keyframes phasein { from { opacity: 0; } to { opacity: 1; } }
+@keyframes phaseout { from { opacity: 1; } to { opacity: 0; } }
+
 /* door entrance choreography — one composed curtain-up, then never again */
 .door-in { opacity: 0; animation: doorin 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 @keyframes doorin {
@@ -198,4 +205,5 @@ button { font: inherit; cursor: pointer; }
   .blink, .seed, .orb.breathing .orb-core, .orb.breathing .orb-trail { animation: none; }
   .door-in { animation: none; opacity: 1; }
   .horizon::before, .horizon::after { animation: none; }
+  .phase-in, .phase-out { animation: none; opacity: 1; }
 }
