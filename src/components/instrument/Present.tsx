@@ -9,9 +9,9 @@ import { MIN_WORDS, countWords } from "@/lib/session";
 import TypeLine from "@/components/hud/TypeLine";
 
 const CLARIFIER_TIERS = [
-  "Present your idea. Raw is fine — polished is not required. I ask questions after, not before.",
-  "That's a headline, not an idea yet. Keep going — what's the actual claim?",
-  "Getting somewhere. Who is this for, and what would make it false?",
+  "Present your play. Raw is fine — polished is not required. I ask questions after, not before.",
+  "That's a ticker, not a thesis yet. Keep going — what's the narrative, and why now?",
+  "Getting somewhere. Why this vehicle, and what would prove you wrong?",
   "That's presentable. Lock it in when you're ready — then the interrogation starts.",
 ];
 
@@ -44,8 +44,8 @@ export default function Present({
           present — the part we can&apos;t do for you
         </p>
         <h2 className="m-0 mb-[38px] max-w-[20em] text-[26px] font-medium leading-[1.45] tracking-[-.01em] [text-wrap:balance]">
-          What&apos;s the idea? Say it like you&apos;d say it out loud —{" "}
-          <em className="not-italic text-lock-deep">we&apos;ll ask the hard questions after.</em>
+          What&apos;s the play? The narrative, the vehicle, why now —{" "}
+          <em className="not-italic text-lock-deep">the chain pushes back after.</em>
         </h2>
 
         <textarea
@@ -54,10 +54,10 @@ export default function Present({
           onChange={(e) => onChange(e.target.value)}
           rows={6}
           spellCheck={false}
-          placeholder="the page is yours…"
+          placeholder="the desk is yours…"
           className="min-h-[150px] w-full resize-none border-0 bg-transparent text-[18px] leading-[1.75] text-ink outline-none [caret-color:var(--lock)] placeholder:text-faint"
           style={{ fontFamily: "var(--grot)" }}
-          aria-label="Your idea"
+          aria-label="Your play"
         />
 
         <div className="flex flex-wrap items-center gap-5 border-t border-line pt-4">
@@ -83,11 +83,11 @@ export default function Present({
                 ? "border-lock-deep text-lock-deep hover:bg-lock-deep hover:text-bg"
                 : "cursor-not-allowed border-line text-faint"}`}
           >
-            [ present idea ]
+            [ present the play ]
           </button>
         </div>
         <p className="m-0 mt-3.5 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
-          authorship: <b className="font-normal text-muted">100% human</b> — id8 never writes your idea
+          authorship: <b className="font-normal text-muted">100% human</b> — id8 never writes your thesis
         </p>
       </main>
 

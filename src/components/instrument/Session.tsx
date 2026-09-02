@@ -144,7 +144,7 @@ export default function Session() {
   };
 
   const label =
-    stage === "present" ? "session 001 · new idea" : `session 001 · ${sessionSlug(thesis)}`;
+    stage === "present" ? "session 001 · new play" : `session 001 · ${sessionSlug(thesis)}`;
 
   return (
     <>

@@ -181,7 +181,7 @@ export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onC
           <p className="m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">claim</p>
           <p className="m-0 mb-5 text-[17px] font-medium leading-relaxed">“{extraction.claim}”</p>
 
-          <p className="m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">audience</p>
+          <p className="m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">narrative</p>
           <p className="m-0 mb-5 text-[15px] leading-relaxed">{extraction.audience}</p>
 
           <p className="m-0 mb-2 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">assumptions</p>

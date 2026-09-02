@@ -114,7 +114,7 @@ export function nodesFromExtraction(
         tag: { label: "core", tone: "lock" },
         body: [
           `“${ex.claim}”`,
-          ex.audience !== "unstated" ? `for: ${ex.audience}` : "audience: unstated — worth knowing",
+          ex.audience !== "unstated" ? `rides: ${ex.audience}` : "narrative: unstated — worth knowing",
         ],
       },
     },
