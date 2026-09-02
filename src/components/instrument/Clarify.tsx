@@ -210,7 +210,7 @@ export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onC
             onClick={onContinue}
             className="border border-lock-deep px-5 py-2.5 font-mono text-[11px] uppercase tracking-[.2em] text-lock-deep transition-colors hover:bg-lock-deep hover:text-bg"
           >
-            [ enter the constellation ]
+            [ take it to the board ]
           </button>
         </div>
       )}

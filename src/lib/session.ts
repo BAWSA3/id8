@@ -44,6 +44,10 @@ export const PHASES = ["Present", "Clarify", "Challenge", "Structure", "Commit"]
 /* Minimum-effort gate: id8 won't accept a headline as an idea. */
 export const MIN_WORDS = 25;
 
+/* localStorage keys — shared by Session (persistence) and FrontDoor (resume detection) */
+export const SESSION_STORE_KEY = "id8.session.v3";
+export const GHOST_SEEN_KEY = "id8.ghost.v1";
+
 export function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }

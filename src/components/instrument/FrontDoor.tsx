@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import GhostSession from "@/components/instrument/GhostSession";
+import { GHOST_SEEN_KEY, SESSION_STORE_KEY, sessionSlug } from "@/lib/session";
 
 /* Boot readout — the door's whisper layer. Doubles as the only product
    explanation a cold visitor gets: live feed, real coverage, the hard rule. */
@@ -66,7 +67,45 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
   const [leaving, setLeaving] = useState(false);
   const [ghost, setGhost] = useState(false);
   const [primed, setPrimed] = useState(false);
+  /* one door: first visit walks through a replayed session; a returning
+     trader (ghost seen, or a session on the desk) goes straight in */
+  const [ghostSeen, setGhostSeen] = useState(true); // assume seen until read
+  const [resumeSlug, setResumeSlug] = useState<string | null>(null);
   const started = useRef(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        setGhostSeen(!!localStorage.getItem(GHOST_SEEN_KEY));
+        const raw = localStorage.getItem(SESSION_STORE_KEY);
+        if (raw) {
+          const s = JSON.parse(raw) as { thesis?: string };
+          if (s?.thesis) setResumeSlug(sessionSlug(s.thesis));
+        }
+      } catch {
+        /* no storage — treat as a fresh first visit */
+        setGhostSeen(false);
+      }
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  function enter() {
+    if (!ghostSeen && !resumeSlug) {
+      try {
+        localStorage.setItem(GHOST_SEEN_KEY, "1");
+      } catch {}
+      setGhost(true);
+      return;
+    }
+    begin();
+  }
+
+  /* the hallway ends the same way it's skipped: onto the trader's own page */
+  function ghostDone() {
+    setGhost(false);
+    begin();
+  }
 
   function begin() {
     if (started.current) return;
@@ -122,7 +161,7 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
           a canvas for your thesis
         </p>
         <button
-          onClick={begin}
+          onClick={enter}
           onMouseEnter={() => setPrimed(true)}
           onMouseLeave={() => setPrimed(false)}
           onFocus={() => setPrimed(true)}
@@ -130,27 +169,17 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
           className="door-in border border-line bg-transparent px-[34px] py-[13px] font-mono text-[11px] uppercase tracking-[.22em] text-ink transition-colors hover:border-lock-deep hover:text-lock-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
           style={{ animationDelay: "0.6s" }}
         >
-          [ begin ]
+          {resumeSlug ? "[ back to the desk ]" : "[ open the desk ]"}
         </button>
-        <button
-          onClick={() => setGhost(true)}
-          className="door-in mt-[18px] border-0 bg-transparent font-mono text-[9.5px] uppercase tracking-[.2em] text-faint transition-colors hover:text-muted focus-visible:text-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
-          style={{ animationDelay: "0.74s" }}
-        >
-          [ watch a session ]
-        </button>
+        {resumeSlug && (
+          <p className="door-in m-0 mt-[16px] font-mono text-[9.5px] uppercase tracking-[.18em] text-faint" style={{ animationDelay: "0.74s" }}>
+            session 001 · {resumeSlug}
+          </p>
+        )}
         <BootReadout />
       </div>
 
-      {ghost && (
-        <GhostSession
-          onClose={() => setGhost(false)}
-          onBegin={() => {
-            setGhost(false);
-            begin();
-          }}
-        />
-      )}
+      {ghost && <GhostSession onClose={ghostDone} onBegin={ghostDone} />}
 
       {/* the traveling eclipse — ink at takeoff, sage on landing */}
       <span

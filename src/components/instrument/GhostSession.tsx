@@ -147,14 +147,14 @@ export default function GhostSession({
     >
       <div className="flex items-baseline justify-between gap-4 border-b border-line px-8 py-4">
         <p className="m-0 font-mono text-[9.5px] uppercase tracking-[.18em] text-muted">
-          ghost session <span className="text-faint">— a real interrogation, replayed<span className="hidden sm:inline"> · not your session · nansen data · sep 2026</span></span>
+          ghost session <span className="text-faint">— a real session, replayed<span className="hidden sm:inline"> · not yours · nansen tape · sep 2026</span></span>
         </p>
         <button
           ref={skipRef}
           onClick={onClose}
           className="shrink-0 whitespace-nowrap border-0 bg-transparent font-mono text-[9.5px] uppercase tracking-[.18em] text-faint transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
         >
-          [ skip ]
+          [ skip to the desk ]
         </button>
       </div>
 
@@ -198,13 +198,13 @@ export default function GhostSession({
           {done && (
             <div className="mt-4 flex flex-col items-start gap-5 border-t border-line pt-7">
               <p className="m-0 font-mono text-[10.5px] uppercase tracking-[.18em] text-muted">
-                that was someone else&apos;s thesis. bring yours.
+                someone else&apos;s session. the desk is yours.
               </p>
               <button
                 onClick={onBegin}
                 className="border border-lock px-[30px] py-[12px] font-mono text-[11px] uppercase tracking-[.22em] text-lock transition-colors hover:bg-lock hover:text-lock-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
               >
-                [ begin ]
+                [ take the desk ]
               </button>
             </div>
           )}

@@ -104,3 +104,47 @@ ink, mono metadata, crop marks, spec-sheet data rows. Round 2 refs (game
 menus, THE CUBE, Stapelfeldt) → bracket target-lock, floating panels,
 instrument interactions. This brief re-grounds all of it on paper.
 Design history: `docs/worlds-demo.html` (v0.1–v0.4).
+
+## The writing system (locked 2026-09-02)
+
+**Anchor world: the desk.** id8 speaks like a trading desk — a room where
+work happens, not a product that markets itself. Every string in the app
+comes from this register, with one exception: the tagline
+("a canvas for your thesis") is the single poetic line the brand gets.
+
+### Lexicon
+
+| say | never say |
+|---|---|
+| the desk | the app, the platform, the tool |
+| a session | a demo, a tutorial, onboarding |
+| the thesis / the play | your idea, your content |
+| the tape | market data, insights |
+| the feed | activity, updates |
+| the board | the constellation, the canvas view, the 3D view |
+| the ledger | history, portfolio |
+| replayed | demo mode, example |
+| the clarifier / the analyst / the skeptic | the AI, the assistant, the model |
+
+### Register rules
+
+- UI chrome: lowercase mono, short declaratives. Buttons are bracketed
+  verbs of the room: `[ open the desk ]`, `[ take it to the board ]`.
+- Agents speak in sentence case, ask questions, never advise, never
+  celebrate. The desk never compliments the trader.
+- No exclamation marks anywhere. No marketing verbs (discover, unlock,
+  supercharge, elevate). Banned words: demo, tutorial, onboarding, AI,
+  powered by, insights, seamless.
+- Numbers are always exact figures from the tape — copy never rounds,
+  never invents.
+- The hard rule appears in desk deadpan wherever authorship could be
+  doubted: "writes your trade — never", "id8 will not write this for you."
+
+### The one door (locked 2026-09-02)
+
+The front door has a single action. First visit: `[ open the desk ]` plays
+a replayed session (skippable — the hallway, not a side room) and lands on
+the trader's own blank page. Ghost seen, or a session in progress: the same
+button reads `[ back to the desk ]` with the session slug beneath it and
+resumes quietly. There is no demo fork; the desk shows you one session,
+then it's yours.

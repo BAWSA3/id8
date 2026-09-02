@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   nodesFromExtraction,
   sessionSlug,
+  SESSION_STORE_KEY as STORE_KEY,
   type Challenge,
   type Extraction,
   type FeedLine,
@@ -18,7 +19,6 @@ import Cockpit from "./Cockpit";
 /* Session orchestration: door → present → clarify → cockpit (challenge).
    Persistence is localStorage until Supabase sessions arrive. */
 
-const STORE_KEY = "id8.session.v3";
 
 type Stage = "present" | "clarify" | "cockpit";
 type ChallengeStatus = "idle" | "loading" | "ready" | "error";

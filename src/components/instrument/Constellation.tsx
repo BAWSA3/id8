@@ -248,7 +248,7 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw }:
     <canvas
       ref={canvasRef}
       className="absolute inset-0 h-full w-full cursor-grab touch-pan-y md:touch-none [&.dragging]:cursor-grabbing"
-      aria-label="3D idea constellation — drag to rotate, click a node to target-lock it"
+      aria-label="the board — drag to rotate, click a node to target-lock it"
     />
   );
 }
