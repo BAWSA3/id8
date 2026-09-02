@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SESSION_STORE_KEY, sessionSlug } from "@/lib/session";
+import Horizon from "@/components/hud/Horizon";
 
 /* Boot readout — the door's whisper layer. Doubles as the only product
    explanation a cold visitor gets: live feed, real coverage, the hard rule. */
@@ -122,6 +123,7 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
       <div
         className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-bg transition-opacity duration-700 ${leaving ? "pointer-events-none opacity-0" : "opacity-100"}`}
       >
+        <Horizon />
         <span
           ref={orbRef}
           className={`orb breathing door-in mb-[34px] size-[76px] ${primed ? "primed" : ""}`}

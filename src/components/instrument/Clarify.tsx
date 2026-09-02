@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Extraction, QA } from "@/lib/session";
 import TypeLine from "@/components/hud/TypeLine";
 import DeskCaption from "@/components/hud/DeskCaption";
+import Horizon from "@/components/hud/Horizon";
 
 interface Props {
   thesis: string;
@@ -88,6 +89,7 @@ export default function Clarify({ thesis, qa, extraction, onQA, onExtracted, onC
 
   return (
     <main className="mx-auto flex w-full max-w-[660px] flex-col px-8 pb-16 pt-[9vh]">
+      <Horizon fixed />
       <p className="m-0 mb-[26px] font-mono text-[10px] uppercase tracking-[.22em] text-muted">
         <span className="seed mr-2.5 align-[1px]" />
         clarify — the interrogation begins

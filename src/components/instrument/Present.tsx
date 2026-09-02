@@ -8,6 +8,7 @@ import { useMemo } from "react";
 import { MIN_WORDS, countWords } from "@/lib/session";
 import TypeLine from "@/components/hud/TypeLine";
 import DeskCaption from "@/components/hud/DeskCaption";
+import Horizon from "@/components/hud/Horizon";
 
 const CLARIFIER_TIERS = [
   "Present your play. Raw is fine — polished is not required. I ask questions after, not before.",
@@ -54,6 +55,7 @@ export default function Present({
 
   return (
     <>
+      <Horizon fixed />
       <main className="mx-auto flex min-h-[70vh] w-full max-w-[660px] flex-col px-8 pt-[13vh]">
         <p className="m-0 mb-[30px] font-mono text-[10px] uppercase tracking-[.22em] text-muted">
           <span id="id8-seed" className="seed mr-2.5 align-[1px]" />

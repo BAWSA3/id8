@@ -163,3 +163,12 @@ accent intensity, never a costume:
   voice wears the pixel font; agents and all working copy stay JetBrains.
 - Rule of thumb: you notice it, you couldn't call the app retro. No
   sprites, no scanlines, no pixel body text.
+
+## The horizon (locked 2026-09-02)
+
+The door and the calm pages (Present, Clarify) stand on a dithered
+horizon: a posterized floor-glow with a dithered edge and a hairline
+floor-line, drifting on a 36s breath (still under reduced-motion).
+Pure atmosphere — it never carries content. The cockpit keeps its own
+board and does not use it. Rule: whisper volume; if a screenshot makes
+you notice it first, it's too loud.
