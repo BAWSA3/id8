@@ -166,11 +166,11 @@ export function nodesFromExtraction(
       id,
       label: `EV-${String(i + 1).padStart(2, "0")}`,
       sub: shortLabel(c.title),
-      pos: [Math.cos(angle) * 272, (c.assumptionIndex % 2 === 0 ? -1 : 1) * 88, Math.sin(angle) * 272],
+      pos: [Math.cos(angle) * 272, (c.assumptionIndex % 2 === 0 ? -1 : 1) * (88 + i * 26), Math.sin(angle) * 272],
       kind: "evidence",
       dossier: {
         title: `EV-${String(i + 1).padStart(2, "0")} — ${c.title}`,
-        sub: `${c.source}${challenge.fixture ? " · FIXTURE DATA" : ""}`,
+        sub: `${c.source}${challenge.fixture ? " · FIXTURE DATA" : " · LIVE"}`,
         tag:
           c.verdict === "contradicts"
             ? { label: `contradicts ${targetId === "thesis" ? "thesis" : targetId.toUpperCase()}`, tone: "contested" }
@@ -195,7 +195,7 @@ export function nodesFromExtraction(
       id,
       label: `RISK-${i + 1}`,
       sub: shortLabel(q),
-      pos: [Math.cos(angle) * 265, 72, Math.sin(angle) * 265],
+      pos: [Math.cos(angle) * 265, 72 + i * 30, Math.sin(angle) * 265],
       kind: "risk",
       dossier: {
         title: `RISK — open question`,

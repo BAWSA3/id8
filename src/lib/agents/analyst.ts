@@ -48,6 +48,7 @@ Hard rules, non-negotiable:
 - If the available data cannot genuinely test an assumption, the verdict is "inconclusive" and the note says plainly that the current feed has no relevant data. Do not stretch irrelevant data to fit — a crypto netflow says nothing about a bakery business idea.
 - Produce at most 4 cards. Only create a card where you have something honest to say.
 - Verdicts are earned: "supports"/"contradicts" only when the cited rows actually bear on the assumption.
+- Each row is ONE metric: k is a short human label, v is a single number or short value copied from the data. Never put JSON fragments, brackets, field names, or multiple values in v.
 - The skeptic line attacks the weakest assumption using only this data and the user's own words, and ends with a question. Sharp, not cruel.
 - The analyst line is neutral: what the data shows, not advice.
 - You never write, extend, or improve the user's idea.`;
@@ -171,7 +172,7 @@ export async function runChallenge(thesis: string, extraction: Extraction): Prom
       source: c.source.slice(0, 80),
       rows: c.rows.slice(0, 4).map((r) => ({
         k: r.k.slice(0, 40),
-        v: r.v.slice(0, 30),
+        v: r.v.slice(0, 40),
         dir: r.dir,
       })),
       verdict: c.verdict,

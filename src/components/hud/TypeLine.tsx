@@ -15,15 +15,21 @@ export default function TypeLine({
 }) {
   const [chars, setChars] = useState(0);
 
+  /* Elapsed-time based (not per-tick increments) so browser timer throttling
+     in background tabs can't stall the line — on return it's simply caught up. */
   useEffect(() => {
-    if (chars >= text.length) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const t = setTimeout(
-      () => setChars(reduced ? text.length : chars + 1),
-      reduced ? 0 : 14 + Math.random() * 18
-    );
-    return () => clearTimeout(t);
-  }, [chars, text]);
+    const msPerChar = 22;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const n = reduced ? text.length : Math.min(text.length, Math.floor((now - start) / msPerChar));
+      setChars(n);
+      if (n < text.length) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [text]);
 
   return (
     <p className="m-0 min-h-[42px] font-mono text-[12.5px] leading-relaxed" aria-live="polite">
