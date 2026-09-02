@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Silkscreen } from "next/font/google";
 import "./globals.css";
 
 const jbMono = JetBrains_Mono({
   variable: "--font-jbmono",
+  subsets: ["latin"],
+});
+
+/* the desk's pixel voice — 32-bit accent, used only where the desk speaks */
+const silkscreen = Silkscreen({
+  weight: "400",
+  variable: "--font-slk",
   subsets: ["latin"],
 });
 
@@ -29,7 +36,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={jbMono.variable}>
+    <html lang="en" className={`${jbMono.variable} ${silkscreen.variable}`}>
       <body>
         <div className="grain" />
         <span className="crop tl" /><span className="crop tr" />

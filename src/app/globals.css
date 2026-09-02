@@ -19,6 +19,7 @@
   --glow: rgba(233, 228, 214, 0.14);
   --mono: var(--font-jbmono), "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   --grot: "Helvetica Neue", -apple-system, "Segoe UI", Arial, sans-serif;
+  --pixel: var(--font-slk), var(--font-jbmono), monospace;
 }
 
 @theme inline {
@@ -33,6 +34,7 @@
   --color-good: var(--good);
   --color-bad: var(--bad);
   --font-mono: var(--mono);
+  --font-pixel: var(--pixel);
 }
 
 * { box-sizing: border-box; }
@@ -50,10 +52,10 @@ body {
 button { font: inherit; cursor: pointer; }
 ::selection { background: var(--lock); color: var(--bg); }
 
-/* film grain */
+/* ordered dither — the console texture (replaces film grain; 32-bit accent) */
 .grain {
-  position: fixed; inset: 0; pointer-events: none; z-index: 40; opacity: 0.35;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.49 0 0 0 0 0.44 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)'/%3E%3C/svg%3E");
+  position: fixed; inset: 0; pointer-events: none; z-index: 40; opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23e9e4d6' fill-opacity='0.055'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23e9e4d6' fill-opacity='0.055'/%3E%3C/svg%3E");
 }
 
 /* viewfinder crop marks */
@@ -106,7 +108,32 @@ button { font: inherit; cursor: pointer; }
 }
 .orb .orb-core {
   position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(circle at 40% 38%, var(--ink), var(--ink) 52%, transparent 74%);
+  /* posterized falloff — the 32-bit light source */
+  background: radial-gradient(
+    circle at 40% 38%,
+    var(--ink) 0 48%,
+    color-mix(in srgb, var(--ink) 72%, transparent) 48% 60%,
+    color-mix(in srgb, var(--ink) 38%, transparent) 60% 69%,
+    transparent 69%
+  );
+}
+/* dithered edge band on the eclipse */
+.orb .orb-core::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23e9e4d6' fill-opacity='0.55'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23e9e4d6' fill-opacity='0.55'/%3E%3C/svg%3E");
+  -webkit-mask: radial-gradient(circle at 40% 38%, transparent 0 44%, #000 52% 62%, transparent 72%);
+  mask: radial-gradient(circle at 40% 38%, transparent 0 44%, #000 52% 62%, transparent 72%);
+}
+
+/* pixel-notched box — the desk's dialogue frame (32-bit accent) */
+.pixel-box {
+  clip-path: polygon(
+    0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0,
+    calc(100% - 6px) 0, calc(100% - 6px) 3px, calc(100% - 3px) 3px, calc(100% - 3px) 6px, 100% 6px,
+    100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px),
+    calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%,
+    6px 100%, 6px calc(100% - 3px), 3px calc(100% - 3px), 3px calc(100% - 6px), 0 calc(100% - 6px)
+  );
 }
 .orb.breathing .orb-core { animation: orbbreathe 5s ease-in-out infinite; }
 .orb.breathing .orb-trail { animation: trailbreathe 5s ease-in-out infinite; }

@@ -14,8 +14,8 @@ export default function DeskCaption({
 }) {
   return (
     <div className="pointer-events-none fixed bottom-6 left-1/2 z-[55] flex w-[min(92vw,620px)] -translate-x-1/2 flex-col items-start gap-1.5 px-2">
-      <div className="pointer-events-auto w-full border border-line px-4 py-3" style={{ background: "var(--bg)" }}>
-        <TypeLine key={text} prefix="the desk" prefixClass="text-muted" text={text} />
+      <div className="pixel-box pointer-events-auto w-full border border-line px-4 py-3" style={{ background: "var(--bg)" }}>
+        <TypeLine key={text} prefix="the desk" prefixClass="font-pixel text-[10px] text-muted" text={text} />
       </div>
       <button
         onClick={onSkip}

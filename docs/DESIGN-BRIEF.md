@@ -148,3 +148,18 @@ the trader's own blank page. Ghost seen, or a session in progress: the same
 button reads `[ back to the desk ]` with the session slug beneath it and
 resumes quietly. There is no demo fork; the desk shows you one session,
 then it's yours.
+
+## The 32-bit accent (locked 2026-09-02)
+
+A quiet console texture across the whole app — pixel + dither flavor,
+accent intensity, never a costume:
+
+- The global overlay is an ordered dither (Bayer-style 4px tile), not film
+  grain: the darkroom is rendered, not photographed.
+- The eclipse falls off in posterized bands with a dithered edge — a
+  32-bit light source, still the locked cream-on-black mark.
+- The desk's dialogue frames are pixel-notched boxes (.pixel-box), and the
+  "the desk ›" prefix is set in Silkscreen (--font-pixel). ONLY the desk's
+  voice wears the pixel font; agents and all working copy stay JetBrains.
+- Rule of thumb: you notice it, you couldn't call the app retro. No
+  sprites, no scanlines, no pixel body text.
