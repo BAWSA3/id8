@@ -22,17 +22,16 @@ export default function TypeLine({
     const msPerChar = 22;
     const start = performance.now();
     let raf = 0;
-    // rAF pauses entirely in background tabs; this coarse fallback snaps the
-    // line to its elapsed position so it still fills in when unfocused.
-    let fallback: ReturnType<typeof setInterval>;
     const tick = (now: number) => {
       const n = reduced ? text.length : Math.min(text.length, Math.floor((now - start) / msPerChar));
       setChars(n);
       if (n < text.length) raf = requestAnimationFrame(tick);
       else clearInterval(fallback);
     };
+    // rAF pauses entirely in background tabs; this coarse fallback snaps the
+    // line to its elapsed position so it still fills in when unfocused.
+    const fallback = setInterval(() => tick(performance.now()), 300);
     raf = requestAnimationFrame(tick);
-    fallback = setInterval(() => tick(performance.now()), 300);
     return () => {
       cancelAnimationFrame(raf);
       clearInterval(fallback);
