@@ -1,21 +1,22 @@
 @import "tailwindcss";
 
-/* ---------- paper tokens (design brief v1: calm / gallery / sage) ---------- */
+/* ---------- darkroom tokens (restored 2026-09-02 — the trading desk wears
+   the instrument: cream on near-black, acid target-lock, print-quality dark) */
 :root {
-  --bg: #f3efe6;          /* warm ivory paper */
-  --ink: #1f1d18;         /* warm near-black */
-  --muted: #85806f;
-  --faint: #b8b2a2;
-  --line: #ddd7c8;        /* hairlines */
-  --panel: #faf8f2;       /* raised surface — hairlines do the work */
-  --panel2: #f0ede3;
-  --lock: #6b7f5e;        /* sage — accent + go */
-  --lock-deep: #5f7357;   /* sage for text on paper */
-  --lock-ink: #f3efe6;
-  --good: #5f7357;
-  --bad: #b5543b;         /* clay — contradicts/risk */
-  --gridline: rgba(31, 29, 24, 0.05);
-  --glow: rgba(31, 29, 24, 0.08);
+  --bg: #0a0a09;          /* darkroom near-black */
+  --ink: #e9e4d6;         /* cream */
+  --muted: #8b8678;
+  --faint: #4e4b43;
+  --line: #232219;
+  --panel: rgba(16, 16, 14, 0.84);
+  --panel2: rgba(24, 23, 19, 0.9);
+  --lock: #cfff2e;        /* acid — target-lock accent + go */
+  --lock-deep: #b9e42a;   /* acid, slightly dimmed for body text on dark */
+  --lock-ink: #0a0a09;
+  --good: #3ed47e;
+  --bad: #ff4b1f;         /* red-orange — contradicts/risk */
+  --gridline: rgba(233, 228, 214, 0.05);
+  --glow: rgba(233, 228, 214, 0.14);
   --mono: var(--font-jbmono), "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   --grot: "Helvetica Neue", -apple-system, "Segoe UI", Arial, sans-serif;
 }
@@ -49,14 +50,14 @@ body {
 button { font: inherit; cursor: pointer; }
 ::selection { background: var(--lock); color: var(--bg); }
 
-/* paper grain — quiet */
+/* film grain */
 .grain {
-  position: fixed; inset: 0; pointer-events: none; z-index: 40; opacity: 0.5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.38 0 0 0 0 0.28 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
+  position: fixed; inset: 0; pointer-events: none; z-index: 40; opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.49 0 0 0 0 0.44 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* crop marks — the gallery's registration, ultra faint */
-.crop { position: fixed; width: 20px; height: 20px; z-index: 30; pointer-events: none; opacity: 0.35; }
+/* viewfinder crop marks */
+.crop { position: fixed; width: 20px; height: 20px; z-index: 30; pointer-events: none; opacity: 0.55; }
 .crop::before, .crop::after { content: ""; position: absolute; background: var(--faint); }
 .crop::before { width: 1px; height: 100%; }
 .crop::after { height: 1px; width: 100%; }
