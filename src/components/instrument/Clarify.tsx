@@ -28,6 +28,28 @@ const DESK_C2 = "structured from your words, nothing added. read it like a contr
 
 type Status = "asking" | "thinking" | "extracting" | "review" | "error";
 
+/* the blink alone reads as hung past a few seconds of model latency —
+   after a beat, the desk quietly admits work is happening */
+function ThinkingLine() {
+  const [long, setLong] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setLong(true), 4200);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div>
+      <p className="m-0 font-mono text-[12.5px] text-muted">
+        <span className="text-lock-deep">clarifier ›</span> <span className="blink" />
+      </p>
+      <p
+        className={`m-0 mt-2 font-mono text-[9px] uppercase tracking-[.16em] text-faint transition-opacity duration-500 ${long ? "opacity-100" : "opacity-0"}`}
+      >
+        <span className="font-pixel">the desk ·</span> weighing your answer
+      </p>
+    </div>
+  );
+}
+
 async function callClarify(op: "question" | "extract", thesis: string, qa: QA[], ticker?: string | null) {
   const res = await fetch("/api/clarify", {
     method: "POST",
@@ -108,7 +130,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
       {qa.length > 0 && (
         <div className="mb-7 flex flex-col gap-5">
           {qa.map((t, i) => (
-            <div key={t.q.slice(0, 40) + i}>
+            <div key={t.q.slice(0, 40) + i} className="door-in">
               <p className="m-0 font-mono text-[12.5px] leading-relaxed text-muted">
                 <span className="text-lock-deep">clarifier ›</span> {t.q}
               </p>
@@ -119,11 +141,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
       )}
 
       {/* current state */}
-      {status === "thinking" && (
-        <p className="m-0 font-mono text-[12.5px] text-muted">
-          <span className="text-lock-deep">clarifier ›</span> <span className="blink" />
-        </p>
-      )}
+      {status === "thinking" && <ThinkingLine />}
 
       {status === "extracting" && (
         <p className="m-0 font-mono text-[12.5px] text-muted">
@@ -133,7 +151,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
       )}
 
       {status === "asking" && question && (
-        <div>
+        <div className="door-in">
           <TypeLine key={question} prefix="clarifier" prefixClass="text-lock-deep" text={question} />
           <textarea
             value={answer}
@@ -151,7 +169,8 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
           />
           <div className="mt-3 flex items-center gap-4">
             <span className="font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
-              question {String(qa.length + 1).padStart(2, "0")} · ⌘↵ to answer
+              question {String(qa.length + 1).padStart(2, "0")} · four at most
+              <span className="hidden [@media(hover:hover)]:inline"> · ⌘↵ to answer</span>
             </span>
             <button
               onClick={submit}
@@ -184,20 +203,27 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
 
       {status === "review" && extraction && (
         <div className="mt-2">
-          <p className="m-0 mb-5 font-mono text-[10px] uppercase tracking-[.2em] text-muted">
+          {/* the contract assembles — signed line by line */}
+          <p className="door-in m-0 mb-5 font-mono text-[10px] uppercase tracking-[.2em] text-muted">
             structured from your words — <b className="font-normal text-lock-deep">nothing added</b>
           </p>
 
-          <p className="m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">claim</p>
-          <p className="m-0 mb-5 text-[17px] font-medium leading-relaxed">“{extraction.claim}”</p>
+          <div className="door-in" style={{ animationDelay: "0.3s" }}>
+            <p className="m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">claim</p>
+            <p className="m-0 mb-5 text-[17px] font-medium leading-relaxed">“{extraction.claim}”</p>
+          </div>
 
-          <p className="m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">narrative</p>
-          <p className="m-0 mb-5 text-[15px] leading-relaxed">{extraction.audience}</p>
+          <div className="door-in" style={{ animationDelay: "0.65s" }}>
+            <p className="m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">narrative</p>
+            <p className="m-0 mb-5 text-[15px] leading-relaxed">{extraction.audience}</p>
+          </div>
 
-          <p className="m-0 mb-2 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">assumptions</p>
+          <p className="door-in m-0 mb-2 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint" style={{ animationDelay: "0.95s" }}>
+            assumptions
+          </p>
           <div className="mb-5 flex flex-col">
             {extraction.assumptions.map((a, i) => (
-              <div key={a.basis} className="border-t border-line py-3">
+              <div key={a.basis} className="door-in border-t border-line py-3" style={{ animationDelay: `${1.1 + i * 0.2}s` }}>
                 <p className="m-0 text-[14.5px] leading-relaxed">
                   <span className="mr-2 font-mono text-[10px] text-faint">A{i + 1}</span>
                   {a.text}
@@ -207,10 +233,19 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
             ))}
           </div>
 
-          <p className="m-0 mb-2 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">open questions</p>
+          <p
+            className="door-in m-0 mb-2 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint"
+            style={{ animationDelay: `${1.2 + extraction.assumptions.length * 0.2}s` }}
+          >
+            open questions
+          </p>
           <div className="mb-8 flex flex-col">
-            {extraction.openQuestions.map((q) => (
-              <p key={q} className="m-0 border-t border-line py-2.5 text-[14px] leading-relaxed text-bad">
+            {extraction.openQuestions.map((q, i) => (
+              <p
+                key={q}
+                className="door-in m-0 border-t border-line py-2.5 text-[14px] leading-relaxed text-bad"
+                style={{ animationDelay: `${1.35 + extraction.assumptions.length * 0.2 + i * 0.15}s` }}
+              >
                 {q}
               </p>
             ))}
@@ -218,7 +253,8 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
 
           <button
             onClick={onContinue}
-            className="border border-lock-deep px-5 py-2.5 font-mono text-[11px] uppercase tracking-[.2em] text-lock-deep transition-colors hover:bg-lock-deep hover:text-bg"
+            className="door-in border border-lock-deep px-5 py-2.5 font-mono text-[11px] uppercase tracking-[.2em] text-lock-deep transition-colors hover:bg-lock-deep hover:text-bg"
+            style={{ animationDelay: `${1.7 + extraction.assumptions.length * 0.2 + extraction.openQuestions.length * 0.15}s` }}
           >
             [ take it to the board ]
           </button>
