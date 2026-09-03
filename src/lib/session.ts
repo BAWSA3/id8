@@ -2,7 +2,7 @@
    Client-safe: no server imports. DB-backed sessions land with Supabase. */
 
 export type NodeKind = "core" | "assumption" | "evidence" | "risk";
-export type EdgeKind = "neutral" | "supports" | "contradicts";
+export type EdgeKind = "neutral" | "supports" | "contradicts" | "risk";
 export type TagTone = "lock" | "ok" | "contested" | "neutral";
 
 export interface DossierRow {
@@ -199,7 +199,7 @@ export function nodesFromExtraction(
       id,
       label: `RISK-${i + 1}`,
       sub: shortLabel(q),
-      pos: [Math.cos(angle) * 265, 72 + i * 30, Math.sin(angle) * 265],
+      pos: [Math.cos(angle) * 335, 96 + i * 34, Math.sin(angle) * 335],
       kind: "risk",
       dossier: {
         title: `RISK — open question`,
@@ -208,7 +208,7 @@ export function nodesFromExtraction(
         body: [q],
       },
     });
-    edges.push({ from: id, to: "thesis", kind: "contradicts" });
+    edges.push({ from: id, to: "thesis", kind: "risk" });
   });
 
   return { nodes, edges };

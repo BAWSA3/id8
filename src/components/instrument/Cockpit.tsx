@@ -17,7 +17,7 @@ import DeskCaption from "@/components/hud/DeskCaption";
 const DESK_B1 = "the board. your thesis at the center, its assumptions in orbit. drag to turn it.";
 const DESK_B2 = "five phases. you're in challenge — the tape weighs in here.";
 const DESK_B3 = "click any node to target-lock it. the dossier shows what the tape found.";
-const DESK_B4 = "the feed: the analyst reports, the skeptic attacks. neither writes your trade.";
+const DESK_B4 = "the feed: the analyst reports what the tape found, the skeptic attacks. neither writes your trade.";
 const DESK_B5 = "that's the desk. it's yours.";
 
 const BUILD_STEP_MS = 3600;
@@ -119,7 +119,7 @@ export default function Cockpit({
                 onClick={onRetryChallenge}
                 className="mt-2 border border-line px-3 py-1.5 font-mono text-[9.5px] uppercase tracking-[.16em] text-muted transition-colors hover:border-ink hover:text-ink"
               >
-                [ retry analyst ]
+                [ read the tape again ]
               </button>
             ) : null
           }

@@ -11,7 +11,8 @@ const AGENT_COLOR: Record<FeedLine["agent"], string> = {
   system: "text-muted",
 };
 
-/* Typewriter agent feed — the JARVIS presence, text only. */
+/* The feed — a transcript. Each line types once, in order, and stays on the
+   board; nothing loops. New lines (the tape landing) append and type in. */
 export default function AgentFeed({
   lines,
   extra,
@@ -21,31 +22,61 @@ export default function AgentFeed({
 }) {
   const [li, setLi] = useState(0);
   const [chars, setChars] = useState(0);
-  const line = lines[Math.min(li, lines.length - 1)];
+  const key = lines.map((l) => l.agent + l.text).join("|");
 
+  /* a new transcript starts from its first line (derived reset during render) */
+  const [seenKey, setSeenKey] = useState(key);
+  if (seenKey !== key) {
+    setSeenKey(key);
+    setLi(0);
+    setChars(0);
+  }
+
+  /* elapsed-time typing: background tabs throttle timers to ~1/s, so the
+     visible length is derived from the clock, never from tick count */
   useEffect(() => {
+    if (li >= lines.length) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const done = chars >= line.text.length;
-    const delay = done ? (reduced ? 6000 : 5200) : reduced ? 0 : 16 + Math.random() * 20;
-    const t = setTimeout(() => {
-      if (!done) setChars(reduced ? line.text.length : chars + 1);
-      else {
-        setLi((i) => (i + 1) % lines.length);
-        setChars(0);
+    const text = lines[li].text;
+    if (reduced) {
+      setChars(text.length);
+      const t = setTimeout(() => { setLi(li + 1); setChars(0); }, 900);
+      return () => clearTimeout(t);
+    }
+    const CPS = 42, HOLD_MS = 700;
+    const start = performance.now();
+    let raf = 0;
+    let advanced = false;
+    const tick = () => {
+      const n = Math.min(text.length, Math.floor(((performance.now() - start) / 1000) * CPS));
+      setChars(n);
+      if (n >= text.length) {
+        if (!advanced && performance.now() - start >= (text.length / CPS) * 1000 + HOLD_MS) {
+          advanced = true;
+          setLi(li + 1);
+          setChars(0);
+        }
       }
-    }, delay);
-    return () => clearTimeout(t);
-  }, [chars, li, line.text.length, lines.length]);
+    };
+    const loop = () => { tick(); raf = requestAnimationFrame(loop); };
+    raf = requestAnimationFrame(loop);
+    const iv = setInterval(tick, 300); // rAF pauses entirely in background tabs
+    return () => { cancelAnimationFrame(raf); clearInterval(iv); };
+  }, [li, lines]);
 
   return (
-    <Panel label="agent feed" className="bottom-[92px] left-10 w-[min(440px,calc(100%-80px))]">
-      <p className="m-0 min-h-[62px] font-mono text-[12.5px] leading-relaxed" aria-live="polite">
-        <span className={AGENT_COLOR[line.agent]}>{line.agent} ›</span>{" "}
-        {line.text.slice(0, chars)}
-        <span className="blink" />
-      </p>
+    <Panel label="the feed" className="bottom-[92px] left-10 w-[min(440px,calc(100%-80px))]">
+      <div className="flex min-h-[62px] flex-col gap-2" aria-live="polite">
+        {lines.slice(0, Math.min(li + 1, lines.length)).map((line, i) => (
+          <p key={line.agent + i} className="m-0 font-mono text-[12.5px] leading-relaxed">
+            <span className={AGENT_COLOR[line.agent]}>{line.agent} ›</span>{" "}
+            {i < li ? line.text : line.text.slice(0, chars)}
+            {i === li && <span className="blink" />}
+          </p>
+        ))}
+      </div>
       <p className="m-0 mt-3 border-t border-line pt-2.5 font-mono text-[10px] uppercase tracking-[.16em] text-muted">
-        your move — defend, revise, or concede. <b className="font-normal text-lock">id8 will not write this for you.</b>
+        what the tape found · what the skeptic doubts. <b className="font-normal text-lock">id8 will not write this for you.</b>
       </p>
       {extra}
     </Panel>

@@ -133,17 +133,44 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw }:
       for (const e of edges) {
         const A = P[e.from], B = P[e.to];
         if (!A || !B) continue;
-        ctx.strokeStyle = e.kind === "supports" ? pal.good : e.kind === "contradicts" ? pal.bad : pal.faint;
+        ctx.strokeStyle = e.kind === "supports" ? pal.good : e.kind === "contradicts" || e.kind === "risk" ? pal.bad : pal.faint;
         ctx.lineWidth = 1;
-        ctx.setLineDash(e.kind === "contradicts" ? [5, 4] : []);
-        ctx.globalAlpha = 0.8;
+        /* contradicts = evidence on the tape (dashed); risk = an open question, nothing verified yet (dotted, quieter) */
+        ctx.setLineDash(e.kind === "contradicts" ? [5, 4] : e.kind === "risk" ? [2, 5] : []);
+        ctx.globalAlpha = e.kind === "risk" ? 0.45 : 0.8;
         ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
         ctx.globalAlpha = 1; ctx.setLineDash([]);
       }
 
-      /* nodes back-to-front */
+      /* labels: front-to-back, each label claims a screen box; a label that
+         would land on a claimed box flips to the node's left, then steps down.
+         The locked node always keeps its natural place. */
       ctx.font = `10px ${monoFace}`;
       const locked = lockedRef.current;
+      const claimed: { x: number; y: number; w: number; h: number }[] = [];
+      const labelAt: Record<string, { x: number; y: number; align: "left" | "right" }> = {};
+      const charW = 6.1, lineH = 12, boxH = 24;
+      const overlaps = (b: { x: number; y: number; w: number; h: number }) =>
+        claimed.some((c) => b.x < c.x + c.w && b.x + b.w > c.x && b.y < c.y + c.h && b.y + b.h > c.y);
+      for (const n of [...nodes].sort((a, b) => (a.id === locked ? -1 : b.id === locked ? 1 : P[a.id].z - P[b.id].z))) {
+        const p = P[n.id], r = (n.kind === "core" ? 10 : 7) * p.s;
+        const w = Math.max(n.label.length, n.sub.length) * charW;
+        const candidates: { x: number; y: number; align: "left" | "right" }[] = [
+          { x: p.x + r + 9, y: p.y - 2, align: "left" },
+          { x: p.x - r - 9, y: p.y - 2, align: "right" },
+          { x: p.x + r + 9, y: p.y - 2 + boxH, align: "left" },
+          { x: p.x - r - 9, y: p.y - 2 + boxH, align: "right" },
+          { x: p.x + r + 9, y: p.y - 2 - boxH, align: "left" },
+        ];
+        let pick = candidates[0];
+        for (const cnd of candidates) {
+          const box = { x: cnd.align === "left" ? cnd.x : cnd.x - w, y: cnd.y - lineH + 2, w, h: boxH };
+          if (!overlaps(box)) { pick = cnd; claimed.push(box); break; }
+        }
+        labelAt[n.id] = pick;
+      }
+
+      /* nodes back-to-front */
       for (const n of [...nodes].sort((a, b) => P[b.id].z - P[a.id].z)) {
         const p = P[n.id], r = (n.kind === "core" ? 10 : 7) * p.s;
         if (n.kind === "core") {
@@ -159,10 +186,19 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw }:
           ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
         }
         const em = hover === n.id || locked === n.id;
+        const L = labelAt[n.id];
+        ctx.textAlign = L.align;
         ctx.fillStyle = em ? pal.ink : pal.muted;
-        ctx.fillText(n.label, p.x + r + 9, p.y - 2);
+        ctx.fillText(n.label, L.x, L.y);
         ctx.fillStyle = pal.faint;
-        ctx.fillText(n.sub, p.x + r + 9, p.y + 10);
+        ctx.fillText(n.sub, L.x, L.y + lineH);
+        ctx.textAlign = "left";
+        if (L.y !== p.y - 2 || L.align !== "left") {
+          /* a displaced label gets a hairline leader back to its node */
+          ctx.strokeStyle = pal.faint; ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
+          ctx.beginPath(); ctx.moveTo(p.x + (L.align === "left" ? r : -r), p.y); ctx.lineTo(L.x + (L.align === "left" ? -3 : 3), L.y - 3); ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
         if (locked === n.id) drawBrackets(p.x, p.y, r, pal.lock, 1.6);
         else if (hover === n.id) drawBrackets(p.x, p.y, r, pal.lock, 1);
       }

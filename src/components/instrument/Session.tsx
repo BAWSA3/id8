@@ -131,17 +131,16 @@ export default function Session() {
   const feed = useMemo<FeedLine[]>(() => {
     if (challengeStatus === "ready" && challenge) {
       return [
-        { agent: "analyst", text: challenge.analystLine + (challenge.fixture ? " (fixture feed — live Nansen pending)" : "") },
+        { agent: "analyst", text: challenge.analystLine + (challenge.fixture ? " (fixture tape — live feed pending)" : "") },
         { agent: "skeptic", text: challenge.skepticLine },
-        { agent: "clarifier", text: "Click any node to inspect it. Evidence cards show exactly which assumption they test." },
       ];
     }
     if (challengeStatus === "error") {
-      return [{ agent: "analyst", text: "The chain feed hit a snag — use retry below." }];
+      return [{ agent: "analyst", text: "The tape hiccupped. Retry when you're ready." }];
     }
     return [
-      { agent: "analyst", text: "Querying the chain — evidence cards incoming…" },
-      { agent: "skeptic", text: "Warming up. Every assumption up there is a target." },
+      { agent: "analyst", text: "Reading the tape. Give me a moment." },
+      { agent: "skeptic", text: "Every assumption up there is a target." },
     ];
   }, [challenge, challengeStatus]);
 

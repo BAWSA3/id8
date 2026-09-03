@@ -185,3 +185,25 @@ name ($EIGEN), rewrites Present's headline ("what's the play on $EIGEN?"),
 briefs the clarifier (never asks WHAT the vehicle is — only WHY), and
 seeds the analyst's evidence plan. Sector and narrative plays stay
 first-class through the hatch.
+
+## The board (locked 2026-09-03)
+
+The cockpit is the peak of the pressure arc; its chrome follows the desk
+register and the board stays legible at any yaw:
+
+- Labels never pile up. Each label claims a screen box front-to-back; a
+  label that would land on a claimed box flips to the node's left, then
+  steps down, and gets a hairline leader back to its node. The locked node
+  always keeps its natural place.
+- Edge grammar: supports = solid green; contradicts (evidence on the tape)
+  = red dashed; risk (an open question, nothing verified yet) = red dotted
+  at whisper alpha. Risk nodes orbit outside the evidence ring.
+- The feed is a transcript, not a ticker. Each line types once, in order,
+  and stays; nothing loops. Typing is clock-driven so a backgrounded tab
+  catches up instead of stalling. Only the analyst and the skeptic speak
+  here — the desk explains furniture, agents never do.
+- Phases not yet built don't invite a click. Only the live phase wears
+  brackets.
+- Footer of the feed: "what the tape found · what the skeptic doubts.
+  id8 will not write this for you." — no promise of an action the room
+  can't take yet (defend/revise/concede arrive with Structure).
