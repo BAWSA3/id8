@@ -31,6 +31,7 @@ export default function Cockpit({
   feed,
   challengeError = false,
   onRetryChallenge,
+  onRule,
   tour = false,
   onTourDone,
 }: {
@@ -40,6 +41,8 @@ export default function Cockpit({
   feed: FeedLine[];
   challengeError?: boolean;
   onRetryChallenge?: () => void;
+  /* the tape is in — the trader can go rule on it */
+  onRule?: () => void;
   tour?: boolean;
   onTourDone?: () => void;
 }) {
@@ -120,6 +123,13 @@ export default function Cockpit({
                 className="mt-2 border border-line px-3 py-1.5 font-mono text-[9.5px] uppercase tracking-[.16em] text-muted transition-colors hover:border-ink hover:text-ink"
               >
                 [ read the tape again ]
+              </button>
+            ) : onRule && !tour ? (
+              <button
+                onClick={onRule}
+                className="mt-3 border border-lock-deep px-4 py-2 font-mono text-[10.5px] uppercase tracking-[.18em] text-lock-deep transition-colors hover:bg-lock-deep hover:text-bg"
+              >
+                [ make the ruling ]
               </button>
             ) : null
           }

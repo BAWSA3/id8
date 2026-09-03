@@ -207,3 +207,26 @@ register and the board stays legible at any yaw:
 - Footer of the feed: "what the tape found · what the skeptic doubts.
   id8 will not write this for you." — no promise of an action the room
   can't take yet (defend/revise/concede arrive with Structure).
+
+## Structure — the ruling (locked 2026-09-03)
+
+The tape is in; the trader rules on every line of the contract in their
+own words. No agent speaks in this phase; it spends no tokens.
+
+- Verbs: `[ hold ]`, `[ revise ]`, `[ cut ]`. A held contested line needs
+  one sentence — "why you hold it against the tape". Revise prefills the
+  trader's own line, never agent text. Cut strikes it; it leaves the board.
+- Supported and unverified lines are held by default; revise/cut stay
+  available quietly (hover-reveal).
+- Open questions: `[ answer ]` in your words (joins the book as a line,
+  unverified) or leave it open (stays on the board as risk).
+- The one gate into Commit: contested lines ruled, and an **invalidation**
+  named — "what takes this off the book: a level, a flow, or an event."
+- The thesis can be revised (`[ revise the thesis ]`) or kept as written.
+- Desktop: the ruling column beside the live board with the HUD gone; the
+  board settles as rulings land (cut nodes leave, held-against-the-tape and
+  revised lines earn acid tags). Mobile: the column only.
+- Commit lands full circle on a quiet page: the thesis after the tape, the
+  ledger ("04 lines in · 03 held (1 against the tape) · 00 revised · 01
+  cut"), every line with its status, and "off the book if". Doc export and
+  share link come with the Commit pass.

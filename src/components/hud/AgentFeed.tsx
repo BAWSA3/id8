@@ -39,9 +39,9 @@ export default function AgentFeed({
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const text = lines[li].text;
     if (reduced) {
-      setChars(text.length);
+      const show = setTimeout(() => setChars(text.length), 0);
       const t = setTimeout(() => { setLi(li + 1); setChars(0); }, 900);
-      return () => clearTimeout(t);
+      return () => { clearTimeout(show); clearTimeout(t); };
     }
     const CPS = 42, HOLD_MS = 700;
     const start = performance.now();

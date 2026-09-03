@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  emptyStructure,
   nodesFromExtraction,
   sessionSlug,
   SESSION_STORE_KEY as STORE_KEY,
@@ -10,6 +11,7 @@ import {
   type Extraction,
   type FeedLine,
   type QA,
+  type StructureState,
 } from "@/lib/session";
 import TopBar from "@/components/hud/TopBar";
 import FrontDoor from "./FrontDoor";
@@ -17,15 +19,17 @@ import TickerGate from "./TickerGate";
 import Present from "./Present";
 import Clarify from "./Clarify";
 import Cockpit from "./Cockpit";
+import Structure from "./Structure";
+import Commit from "./Commit";
 
-/* Session orchestration: door → present → clarify → cockpit (challenge).
+/* Session orchestration: door → present → clarify → cockpit (challenge) → structure (the ruling) → commit.
    Persistence is localStorage until Supabase sessions arrive. */
 
 
-type Stage = "present" | "clarify" | "cockpit";
+type Stage = "present" | "clarify" | "cockpit" | "structure" | "commit";
 type View = Stage | "gate";
 type ChallengeStatus = "idle" | "loading" | "ready" | "error";
-const PHASE_INDEX: Record<Stage, number> = { present: 0, clarify: 1, cockpit: 2 };
+const PHASE_INDEX: Record<Stage, number> = { present: 0, clarify: 1, cockpit: 2, structure: 3, commit: 4 };
 
 interface Stored {
   thesis: string;
@@ -35,6 +39,8 @@ interface Stored {
   challenge: Challenge | null;
   /* the named vehicle: string = ticker, null = narrative play, absent = not asked */
   ticker?: string | null;
+  /* the ruling (structure) — absent on sessions that never got there */
+  structure?: StructureState;
 }
 
 export default function Session() {
@@ -46,6 +52,7 @@ export default function Session() {
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [challengeStatus, setChallengeStatus] = useState<ChallengeStatus>("idle");
+  const [structure, setStructure] = useState<StructureState>(emptyStructure);
   const [hydrated, setHydrated] = useState(false);
   /* first visit only: the desk teaches while it builds itself */
   const [tour, setTour] = useState(false);
@@ -75,8 +82,12 @@ export default function Session() {
             setChallenge(s.challenge);
             setChallengeStatus("ready");
           }
+          if (s.structure) setStructure({ ...emptyStructure(), ...s.structure });
           if (s.stage === "clarify" || s.stage === "cockpit") {
             setStage(s.thesis.trim() ? s.stage : "present");
+          } else if (s.stage === "structure" || s.stage === "commit") {
+            /* the ruling needs the tape; without it, back to the board */
+            setStage(s.thesis.trim() ? (s.challenge ? s.stage : "cockpit") : "present");
           }
         }
       } catch {
@@ -91,9 +102,9 @@ export default function Session() {
     if (!hydrated) return;
     localStorage.setItem(
       STORE_KEY,
-      JSON.stringify({ thesis, stage, qa, extraction, challenge, ticker } satisfies Stored)
+      JSON.stringify({ thesis, stage, qa, extraction, challenge, ticker, structure } satisfies Stored)
     );
-  }, [thesis, stage, qa, extraction, challenge, ticker, hydrated]);
+  }, [thesis, stage, qa, extraction, challenge, ticker, structure, hydrated]);
 
   const fetchChallenge = useCallback(async () => {
     if (fetching.current || !extraction) return;
@@ -124,8 +135,8 @@ export default function Session() {
   }, [stage, hydrated, extraction, challenge, challengeStatus, fetchChallenge]);
 
   const graph = useMemo(
-    () => (extraction ? nodesFromExtraction(thesis, extraction, challenge) : null),
-    [thesis, extraction, challenge]
+    () => (extraction ? nodesFromExtraction(thesis, extraction, challenge, structure) : null),
+    [thesis, extraction, challenge, structure]
   );
 
   const feed = useMemo<FeedLine[]>(() => {
@@ -152,6 +163,7 @@ export default function Session() {
     setExtraction(null);
     setChallenge(null);
     setChallengeStatus("idle");
+    setStructure(emptyStructure());
     localStorage.removeItem(STORE_KEY);
   };
 
@@ -239,8 +251,30 @@ export default function Session() {
             feed={feed}
             challengeError={challengeStatus === "error"}
             onRetryChallenge={fetchChallenge}
+            onRule={challengeStatus === "ready" ? () => setStage("structure") : undefined}
             tour={tour}
             onTourDone={endTour}
+          />
+        )}
+        {shownView === "structure" && extraction && (
+          <Structure
+            thesis={thesis}
+            ticker={ticker ?? null}
+            extraction={extraction}
+            challenge={challenge}
+            structure={structure}
+            onChange={setStructure}
+            onCommit={() => setStage("commit")}
+            onBack={() => setStage("cockpit")}
+          />
+        )}
+        {shownView === "commit" && extraction && (
+          <Commit
+            ticker={ticker ?? null}
+            extraction={extraction}
+            challenge={challenge}
+            structure={structure}
+            onBack={() => setStage("structure")}
           />
         )}
       </div>

@@ -90,6 +90,56 @@ export interface Challenge {
   fixture: boolean;
 }
 
+/* ---------- STRUCTURE: the ruling ---------- */
+
+export type RulingKind = "hold" | "revise" | "cut";
+export interface Ruling {
+  kind: RulingKind;
+  text?: string; // revise: the line, rewritten by the trader
+  reason?: string; // hold against the tape: why
+}
+export interface StructureState {
+  rulings: Record<number, Ruling>; // by assumption index (0-based)
+  answers: Record<number, string>; // by open-question index; absent = left open
+  invalidation: string; // what takes this off the book
+  claimAfter: string | null; // the thesis, revised after the tape (null = as written)
+}
+export const emptyStructure = (): StructureState => ({ rulings: {}, answers: {}, invalidation: "", claimAfter: null });
+
+export type LineVerdict = "supported" | "contested" | "unverified";
+export function lineVerdict(challenge: Challenge | null | undefined, i0: number): { verdict: LineVerdict; cards: EvidenceCard[] } {
+  const cards = challenge?.cards.filter((c) => c.assumptionIndex === i0 + 1) ?? [];
+  if (cards.some((c) => c.verdict === "contradicts")) return { verdict: "contested", cards };
+  if (cards.some((c) => c.verdict === "supports")) return { verdict: "supported", cards };
+  return { verdict: "unverified", cards };
+}
+
+const words = (t: string | undefined) => (t ?? "").trim().split(/\s+/).filter(Boolean).length;
+
+/* The gate into Commit: every contested line ruled (with its reason or its
+   rewrite), and an invalidation on the book. Nothing else is required. */
+export function structureGate(ex: Extraction, challenge: Challenge | null | undefined, st: StructureState): { ok: boolean; missing: string[] } {
+  const missing: string[] = [];
+  ex.assumptions.forEach((_, i) => {
+    const r = st.rulings[i];
+    const { verdict } = lineVerdict(challenge, i);
+    if (verdict === "contested" && !r) missing.push(`rule on A${i + 1}`);
+    if (r?.kind === "hold" && verdict === "contested" && words(r.reason) < 2) missing.push(`why you hold A${i + 1}`);
+    if (r?.kind === "revise" && words(r.text) < 3) missing.push(`rewrite A${i + 1}`);
+  });
+  if (words(st.invalidation) < 3) missing.push("name the invalidation");
+  if (st.claimAfter !== null && words(st.claimAfter) < 5) missing.push("finish the thesis");
+  return { ok: missing.length === 0, missing };
+}
+
+/* Final text of a line after the ruling (null = cut) */
+export function lineAfter(ex: Extraction, st: StructureState, i: number): string | null {
+  const r = st.rulings[i];
+  if (r?.kind === "cut") return null;
+  if (r?.kind === "revise" && r.text?.trim()) return r.text.trim();
+  return ex.assumptions[i].text;
+}
+
 function shortLabel(text: string, words = 3): string {
   return text.trim().split(/\s+/).slice(0, words).join(" ").toLowerCase();
 }
@@ -100,7 +150,8 @@ function shortLabel(text: string, words = 3): string {
 export function nodesFromExtraction(
   thesis: string,
   ex: Extraction,
-  challenge?: Challenge | null
+  challenge?: Challenge | null,
+  structure?: StructureState | null
 ): {
   nodes: IdeaNode[];
   edges: IdeaEdge[];
@@ -114,11 +165,12 @@ export function nodesFromExtraction(
       kind: "core",
       dossier: {
         title: "Thesis",
-        sub: "typed by hand · authorship 100% human",
+        sub: structure?.claimAfter ? "typed by hand · revised after the tape" : "typed by hand · authorship 100% human",
         tag: { label: "core", tone: "lock" },
         body: [
-          `“${ex.claim}”`,
+          `“${structure?.claimAfter?.trim() || ex.claim}”`,
           ex.audience !== "unstated" ? `rides: ${ex.audience}` : "narrative: unstated — worth knowing",
+          ...(structure?.invalidation.trim() ? [`off the book if: ${structure.invalidation.trim()}`] : []),
         ],
       },
     },
@@ -133,32 +185,46 @@ export function nodesFromExtraction(
     return null;
   };
 
+  const cut = (i: number) => structure?.rulings[i]?.kind === "cut";
+
   ex.assumptions.forEach((a, i) => {
+    if (cut(i)) return; // a cut line leaves the board
     const angle = (i / n) * Math.PI * 2 + 0.5;
     const id = `a${i + 1}`;
     const verdict = verdictFor(i + 1);
+    const r = structure?.rulings[i];
+    const text = r?.kind === "revise" && r.text?.trim() ? r.text.trim() : a.text;
+    const tag: Dossier["tag"] =
+      r?.kind === "revise"
+        ? { label: "revised after the tape", tone: "lock" }
+        : r?.kind === "hold" && verdict === "contradicts"
+          ? { label: "held against the tape", tone: "lock" }
+          : verdict === "contradicts"
+            ? { label: "contested by the tape", tone: "contested" }
+            : verdict === "supports"
+              ? { label: "supported by the tape", tone: "ok" }
+              : { label: "unverified", tone: "neutral" };
+    const body = [text, `from your words: “${a.basis}”`];
+    if (r?.kind === "hold" && r.reason?.trim()) body.push(`held because: ${r.reason.trim()}`);
+    if (r?.kind === "revise") body.push(`as written before the tape: “${a.text}”`);
     nodes.push({
       id,
       label: `A${i + 1}`,
-      sub: shortLabel(a.text),
+      sub: shortLabel(text),
       pos: [Math.cos(angle) * 200, (i % 2 === 0 ? -1 : 1) * 38, Math.sin(angle) * 200],
       kind: "assumption",
       dossier: {
-        title: `A${i + 1} — ${a.text.slice(0, 48)}${a.text.length > 48 ? "…" : ""}`,
+        title: `A${i + 1} — ${text.slice(0, 48)}${text.length > 48 ? "…" : ""}`,
         sub: "assumption · extracted from your words",
-        tag:
-          verdict === "contradicts"
-            ? { label: "contested by evidence", tone: "contested" }
-            : verdict === "supports"
-              ? { label: "supported by evidence", tone: "ok" }
-              : { label: "unverified", tone: "neutral" },
-        body: [a.text, `from your words: “${a.basis}”`],
+        tag,
+        body,
       },
     });
     edges.push({ from: "thesis", to: id, kind: "neutral" });
   });
 
   challenge?.cards.forEach((c, i) => {
+    if (c.assumptionIndex >= 1 && c.assumptionIndex <= n && cut(c.assumptionIndex - 1)) return; // tested a line that left the board
     const id = `ev${i + 1}`;
     const targetId = c.assumptionIndex >= 1 && c.assumptionIndex <= n ? `a${c.assumptionIndex}` : "thesis";
     const baseAngle =
@@ -195,6 +261,25 @@ export function nodesFromExtraction(
   ex.openQuestions.forEach((q, i) => {
     const angle = ((i + 0.5) / ex.openQuestions.length) * Math.PI * 2 + 2.1;
     const id = `risk${i + 1}`;
+    const answer = structure?.answers[i]?.trim();
+    if (answer) {
+      /* answered in the ruling: it joins the book as a line, unverified */
+      nodes.push({
+        id,
+        label: `Q${i + 1}`,
+        sub: shortLabel(answer),
+        pos: [Math.cos(angle) * 335, 96 + i * 34, Math.sin(angle) * 335],
+        kind: "assumption",
+        dossier: {
+          title: `Q${i + 1} — answered in the ruling`,
+          sub: "from an open question · unverified",
+          tag: { label: "answered · unverified", tone: "neutral" },
+          body: [answer, `the question: ${q}`],
+        },
+      });
+      edges.push({ from: "thesis", to: id, kind: "neutral" });
+      return;
+    }
     nodes.push({
       id,
       label: `RISK-${i + 1}`,
