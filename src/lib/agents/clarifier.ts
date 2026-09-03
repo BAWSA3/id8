@@ -33,6 +33,9 @@ export const ExtractionSchema = z.object({
     })
   ).describe("3 to 5 load-bearing assumptions"),
   openQuestions: z.array(z.string()).describe("1 to 3 things still unverified — these become risk nodes"),
+  invalidation: z
+    .string()
+    .describe("What the trader said takes them out of the play — the level, flow, or event — in their words; exactly 'unstated' if they never gave one"),
 });
 export type Extraction = z.infer<typeof ExtractionSchema>;
 
@@ -69,7 +72,8 @@ Hard rules, non-negotiable:
 - Extract, never invent. Every field must be assembled from the user's own words in the thesis and answers. Reorganizing and tightening their phrasing is allowed; adding new substance is not.
 - claim = the core thesis of the play. audience = the narrative or meta it rides, in their words; if never stated, write exactly "unstated" — do not guess one.
 - Each assumption's "basis" must be a short verbatim quote (under 15 words) copied from the user's text. Assumptions are what the play needs to be true — about the narrative's life, the vehicle, the flows, the timing.
-- openQuestions are the things the trader asserted but nothing in their words verifies — the unstated invalidation belongs here if they never gave one. Phrase each as a neutral open question, not advice.
+- invalidation = what the trader said takes them out — the level, flow, or event that proves the play wrong — tightened from their words, never invented. If they never gave one, write exactly "unstated" and add the missing invalidation to openQuestions.
+- openQuestions are the things the trader asserted but nothing in their words verifies. Phrase each as a neutral open question, not advice.
 - 3 to 5 assumptions. 1 to 3 open questions.`;
 
 export async function nextQuestion(
@@ -132,16 +136,40 @@ export async function extract(thesis: string, qa: QA[], ticker?: string): Promis
     throw new Error("extraction_parse_failed");
   }
   const ex = response.parsed_output;
+  const source = [thesis, ...qa.map((t) => t.a)].join("\n");
   // bound the shapes regardless of what the model returned
   return {
     claim: ex.claim.slice(0, 600),
     audience: ex.audience.slice(0, 300),
     assumptions: ex.assumptions.slice(0, 5).map((a) => ({
       text: a.text.slice(0, 300),
-      basis: a.basis.slice(0, 160),
+      basis: verbatimBasis(a.basis, source),
     })),
     openQuestions: ex.openQuestions.slice(0, 3).map((q) => q.slice(0, 300)),
+    invalidation: (ex.invalidation || "unstated").slice(0, 300),
   };
+}
+
+/* "from your words" must be exactly that. A basis the model garbled (seen
+   live: a repetition run — "…the forming tell.tell.tell.tell…") is trimmed
+   from the right until it is a verbatim run of the trader's text. */
+const norm = (s: string) =>
+  s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
+
+export function verbatimBasis(basis: string, source: string): string {
+  const src = norm(source);
+  const clean = basis.trim().replace(/\s+/g, " ");
+  if (clean && src.includes(norm(clean))) return clean.slice(0, 160);
+  const w = clean.split(" ");
+  for (let n = Math.min(w.length, 18); n >= 3; n--) {
+    const cand = w.slice(0, n).join(" ");
+    if (src.includes(norm(cand))) return cand.slice(0, 160);
+    /* the garbled word itself: try it cut at its first punctuation run */
+    const last = w[n - 1].split(/(?<=[.!?,;])/)[0];
+    const cand2 = [...w.slice(0, n - 1), last].join(" ");
+    if (src.includes(norm(cand2))) return cand2.slice(0, 160);
+  }
+  return w.slice(0, 12).join(" ").slice(0, 160);
 }
 
 export class ClarifierRefusal extends Error {

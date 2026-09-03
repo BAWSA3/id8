@@ -5,7 +5,7 @@
    Ends with an extraction review: "structured from your words — nothing added." */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Extraction, QA } from "@/lib/session";
+import { statedInvalidation, type Extraction, type QA } from "@/lib/session";
 import TypeLine from "@/components/hud/TypeLine";
 import DeskCaption from "@/components/hud/DeskCaption";
 import Horizon from "@/components/hud/Horizon";
@@ -237,6 +237,15 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
             <p className="m-0 mb-5 text-[15px] leading-relaxed">{extraction.audience}</p>
           </div>
 
+          <div className="door-in" style={{ animationDelay: "0.85s" }}>
+            <p className="m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">invalidation · what takes this off the book</p>
+            {statedInvalidation(extraction) ? (
+              <p className="m-0 mb-5 text-[15px] leading-relaxed">{statedInvalidation(extraction)}</p>
+            ) : (
+              <p className="m-0 mb-5 text-[15px] leading-relaxed text-bad">unstated — the desk will ask before anything goes on the book</p>
+            )}
+          </div>
+
           <p className="door-in m-0 mb-2 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint" style={{ animationDelay: "0.95s" }}>
             assumptions · {String(extraction.assumptions.length).padStart(2, "0")}
             {struck.length > 0 && <span className="text-bad"> · {String(struck.length).padStart(2, "0")} struck</span>}
@@ -245,10 +254,10 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
             {extraction.assumptions.map((a, i) => (
               <div
                 key={a.basis}
-                className={`door-in group flex items-start gap-4 border-t border-line py-3 transition-opacity duration-300 ${struck.includes(i) ? "opacity-40" : ""}`}
+                className={`door-in group relative border-t border-line py-3 pr-20 transition-opacity duration-300 ${struck.includes(i) ? "opacity-40" : ""}`}
                 style={{ animationDelay: `${1.1 + i * 0.2}s` }}
               >
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0">
                   <p className={`m-0 text-[14.5px] leading-relaxed ${struck.includes(i) ? "line-through decoration-bad decoration-1" : ""}`}>
                     <span className="mr-2 font-mono text-[10px] text-faint">A{i + 1}</span>
                     {a.text}
@@ -258,7 +267,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
                 <button
                   onClick={() => toggleStrike(i)}
                   aria-pressed={struck.includes(i)}
-                  className={`shrink-0 border-0 bg-transparent p-0 pt-1 font-mono text-[9px] uppercase tracking-[.16em] transition-opacity focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock ${
+                  className={`absolute right-0 top-4 border-0 bg-transparent p-0 font-mono text-[9px] uppercase tracking-[.16em] transition-opacity focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock ${
                     struck.includes(i) ? "text-muted opacity-100 hover:text-ink" : "text-faint opacity-0 hover:text-bad group-hover:opacity-100 [@media(hover:none)]:opacity-100"
                   }`}
                 >

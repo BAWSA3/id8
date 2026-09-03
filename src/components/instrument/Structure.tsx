@@ -83,9 +83,12 @@ export default function Structure({ thesis, ticker, extraction, challenge, struc
 
       {/* ---------- the column ---------- */}
       <div className="min-w-0">
-        <p className="m-0 mb-[22px] font-mono text-[10px] uppercase tracking-[.22em] text-muted">
-          <span className="seed mr-2.5 align-[1px]" />
-          structure — the ruling
+        <p className="m-0 mb-[22px] flex items-baseline font-mono text-[10px] uppercase tracking-[.22em] text-muted">
+          <span>
+            <span className="seed mr-2.5 align-[1px]" />
+            structure — the ruling
+          </span>
+          <button onClick={onBack} className={`${VERB} ml-auto text-faint hover:text-muted`}>[ back to the board ]</button>
         </p>
 
         <div className="pixel-box mb-7 border border-line px-4 py-3" style={{ background: "var(--bg)" }}>
@@ -321,14 +324,13 @@ export default function Structure({ thesis, ticker, extraction, challenge, struc
           <span className="font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
             {gate.ok ? "every line ruled · invalidation set" : `before that: ${gate.missing.join(" · ")}`}
           </span>
-          <button onClick={onBack} className={`${VERB} ml-auto text-faint hover:text-muted`}>[ back to the board ]</button>
         </div>
       </div>
 
       {/* ---------- the board, settling ---------- */}
       <div className="hidden md:block">
         <div className="sticky top-[88px] h-[calc(100vh-140px)] max-h-[720px]">
-          <Constellation nodes={graph.nodes} edges={graph.edges} lockedId={locked} onLock={setLocked} />
+          <Constellation nodes={graph.nodes} edges={graph.edges} lockedId={locked} onLock={setLocked} initialZoom={0.72} />
           <p className="pointer-events-none absolute bottom-2 left-1/2 m-0 -translate-x-1/2 whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[.18em] text-faint">
             the board · settling as you rule
           </p>

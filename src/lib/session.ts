@@ -70,7 +70,11 @@ export interface Extraction {
   audience: string;
   assumptions: { text: string; basis: string }[];
   openQuestions: string[];
+  /* what the trader said takes them out, in their words; "unstated" if never given (absent on older sessions) */
+  invalidation?: string;
 }
+export const statedInvalidation = (ex: Extraction | null | undefined): string | null =>
+  ex?.invalidation && ex.invalidation.trim().toLowerCase() !== "unstated" ? ex.invalidation.trim() : null;
 
 /* Client-safe mirror of the analyst's output shape (the agent module is
    server-only and can't be imported here). */

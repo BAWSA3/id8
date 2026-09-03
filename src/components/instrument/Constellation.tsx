@@ -17,12 +17,14 @@ interface Props {
   lockedId: string | null;
   onLock: (id: string) => void;
   onYaw?: (deg: number) => void;
+  /* starting zoom — smaller stages (the ruling's side board) start pulled back */
+  initialZoom?: number;
 }
 
 const AUTO_ROT = 0.0028;
 const DEBRIS_COUNT = 26;
 
-export default function Constellation({ nodes, edges, lockedId, onLock, onYaw }: Props) {
+export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, initialZoom = 1 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lockedRef = useRef(lockedId);
 
@@ -51,7 +53,7 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw }:
     const monoFace = cs.getPropertyValue("--mono").trim() || "monospace";
 
     let W = 0, H = 0;
-    let yaw = 0.6, pitch = -0.28, zoom = 1;
+    let yaw = 0.6, pitch = -0.28, zoom = initialZoom;
     let hover: string | null = null;
     let dragging = false, lx = 0, ly = 0, moved = 0;
     let raf = 0;

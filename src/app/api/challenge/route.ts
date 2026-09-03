@@ -22,6 +22,7 @@ const BodySchema = z.object({
       .min(1)
       .max(5),
     openQuestions: z.array(z.string().max(300)).max(3),
+    invalidation: z.string().max(300).optional(),
   }),
 });
 
@@ -45,7 +46,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const challenge = await runChallenge(body.thesis, body.extraction, body.ticker);
+    const extraction = { ...body.extraction, invalidation: body.extraction.invalidation ?? "unstated" };
+    const challenge = await runChallenge(body.thesis, extraction, body.ticker);
     return NextResponse.json({ challenge });
   } catch (err) {
     if (err instanceof AnalystRefusal) {

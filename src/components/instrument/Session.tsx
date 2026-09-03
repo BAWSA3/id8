@@ -5,6 +5,7 @@ import {
   emptyStructure,
   nodesFromExtraction,
   sessionSlug,
+  statedInvalidation,
   SESSION_STORE_KEY as STORE_KEY,
   TOUR_SEEN_KEY,
   type Challenge,
@@ -251,7 +252,15 @@ export default function Session() {
             feed={feed}
             challengeError={challengeStatus === "error"}
             onRetryChallenge={fetchChallenge}
-            onRule={challengeStatus === "ready" ? () => setStage("structure") : undefined}
+            onRule={
+              challengeStatus === "ready"
+                ? () => {
+                    const stated = statedInvalidation(extraction);
+                    if (stated && !structure.invalidation.trim()) setStructure({ ...structure, invalidation: stated });
+                    setStage("structure");
+                  }
+                : undefined
+            }
             tour={tour}
             onTourDone={endTour}
           />

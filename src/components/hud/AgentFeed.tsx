@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FeedLine } from "@/lib/session";
 import Panel from "./Panel";
 
@@ -23,6 +23,12 @@ export default function AgentFeed({
   const [li, setLi] = useState(0);
   const [chars, setChars] = useState(0);
   const key = lines.map((l) => l.agent + l.text).join("|");
+  /* the transcript scrolls inside the panel — the feed never grows into the phases above it */
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scroller.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [chars, li]);
 
   /* a new transcript starts from its first line (derived reset during render) */
   const [seenKey, setSeenKey] = useState(key);
@@ -66,7 +72,11 @@ export default function AgentFeed({
 
   return (
     <Panel label="the feed" className="bottom-[92px] left-10 w-[min(440px,calc(100%-80px))]">
-      <div className="flex min-h-[62px] flex-col gap-2" aria-live="polite">
+      <div
+        ref={scroller}
+        className="flex max-h-[min(300px,calc(100vh-600px))] min-h-[62px] flex-col gap-2 overflow-y-auto pr-1 [scrollbar-width:thin]"
+        aria-live="polite"
+      >
         {lines.slice(0, Math.min(li + 1, lines.length)).map((line, i) => (
           <p key={line.agent + i} className="m-0 font-mono text-[12.5px] leading-relaxed">
             <span className={AGENT_COLOR[line.agent]}>{line.agent} ›</span>{" "}
