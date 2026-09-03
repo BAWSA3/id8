@@ -5,7 +5,7 @@
    Ends with an extraction review: "structured from your words — nothing added." */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { statedInvalidation, type Extraction, type QA } from "@/lib/session";
+import { MAX_ANSWER_CHARS, statedInvalidation, type Extraction, type QA } from "@/lib/session";
 import TypeLine from "@/components/hud/TypeLine";
 import DeskCaption from "@/components/hud/DeskCaption";
 import Horizon from "@/components/hud/Horizon";
@@ -172,6 +172,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
             }}
             rows={3}
+            maxLength={MAX_ANSWER_CHARS}
             autoFocus
             spellCheck={false}
             placeholder="answer in your own words…"
@@ -183,6 +184,12 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
             <span className="font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
               question {String(qa.length + 1).padStart(2, "0")} · four at most
               <span className="hidden [@media(hover:hover)]:inline"> · ⌘↵ to answer</span>
+              {answer.length > MAX_ANSWER_CHARS * 0.8 && (
+                <span className={answer.length >= MAX_ANSWER_CHARS ? "text-bad" : ""}>
+                  {" · "}
+                  {answer.length.toLocaleString("en-US")} / {MAX_ANSWER_CHARS.toLocaleString("en-US")} characters
+                </span>
+              )}
             </span>
             <button
               onClick={submit}

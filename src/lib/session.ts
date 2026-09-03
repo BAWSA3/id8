@@ -43,6 +43,9 @@ export const PHASES = ["Present", "Clarify", "Challenge", "Structure", "Commit"]
 
 /* Minimum-effort gate: id8 won't accept a headline as an idea. */
 export const MIN_WORDS = 25;
+/* Room to write — the desk holds a long thesis and long answers; the routes enforce the same caps */
+export const MAX_THESIS_CHARS = 4000;
+export const MAX_ANSWER_CHARS = 3000;
 
 /* localStorage keys — shared by Session (persistence) and FrontDoor (resume detection) */
 export const SESSION_STORE_KEY = "id8.session.v3";

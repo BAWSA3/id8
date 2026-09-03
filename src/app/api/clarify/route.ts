@@ -8,6 +8,7 @@ import {
   nextQuestion,
 } from "@/lib/agents/clarifier";
 import { rateLimited } from "@/lib/rate-limit";
+import { MAX_ANSWER_CHARS, MAX_THESIS_CHARS } from "@/lib/session";
 
 /* Security posture (anonymous-by-design demo — no auth, no DB):
    - input validation: zod + hard length/turn caps
@@ -17,13 +18,13 @@ import { rateLimited } from "@/lib/rate-limit";
 
 const BodySchema = z.object({
   op: z.enum(["question", "extract"]),
-  thesis: z.string().min(10).max(2000),
+  thesis: z.string().min(10).max(MAX_THESIS_CHARS),
   ticker: z
     .string()
     .regex(/^[A-Za-z0-9$._-]{1,15}$/)
     .optional(),
   qa: z
-    .array(z.object({ q: z.string().min(1).max(500), a: z.string().min(1).max(1500) }))
+    .array(z.object({ q: z.string().min(1).max(500), a: z.string().min(1).max(MAX_ANSWER_CHARS) }))
     .max(MAX_QUESTIONS + 1),
 });
 
@@ -39,11 +40,15 @@ export async function POST(req: Request) {
   let body: z.infer<typeof BodySchema>;
   try {
     body = BodySchema.parse(await req.json());
-  } catch {
-    return NextResponse.json(
-      { error: "invalid_request", message: "Malformed request." },
-      { status: 400 }
-    );
+  } catch (err) {
+    /* say which cap was hit — a writer shouldn't have to guess */
+    let message = "Malformed request.";
+    if (err instanceof z.ZodError) {
+      const big = err.issues.find((i) => i.code === "too_big");
+      if (big?.path[0] === "thesis") message = `The thesis runs past ${MAX_THESIS_CHARS.toLocaleString("en-US")} characters — trim it and present again.`;
+      else if (big?.path[0] === "qa") message = `That answer runs past ${MAX_ANSWER_CHARS.toLocaleString("en-US")} characters — trim it and send again.`;
+    }
+    return NextResponse.json({ error: "invalid_request", message }, { status: 400 });
   }
 
   try {

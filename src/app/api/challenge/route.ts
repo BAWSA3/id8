@@ -3,13 +3,14 @@ import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { AnalystRefusal, runChallenge } from "@/lib/agents/analyst";
 import { rateLimited } from "@/lib/rate-limit";
+import { MAX_THESIS_CHARS } from "@/lib/session";
 
 /* Same security posture as /api/clarify: zod-validated + capped inputs,
    untrusted-wrapping in the agent layer, bounded structured output,
    per-IP + global daily rate limits. Anonymous by design (no auth/DB yet). */
 
 const BodySchema = z.object({
-  thesis: z.string().min(10).max(2000),
+  thesis: z.string().min(10).max(MAX_THESIS_CHARS),
   ticker: z
     .string()
     .regex(/^[A-Za-z0-9$._-]{1,15}$/)

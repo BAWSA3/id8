@@ -5,7 +5,7 @@
    that energy is earned in later phases. */
 
 import { useMemo } from "react";
-import { MIN_WORDS, countWords } from "@/lib/session";
+import { MAX_THESIS_CHARS, MIN_WORDS, countWords } from "@/lib/session";
 import TypeLine from "@/components/hud/TypeLine";
 import DeskCaption from "@/components/hud/DeskCaption";
 import Horizon from "@/components/hud/Horizon";
@@ -96,6 +96,7 @@ export default function Present({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={6}
+          maxLength={MAX_THESIS_CHARS}
           spellCheck={false}
           placeholder="the desk is yours…"
           className="min-h-[150px] w-full resize-none border-0 bg-transparent text-[18px] leading-[1.75] text-ink outline-none [caret-color:var(--lock)] placeholder:text-faint"
@@ -113,6 +114,12 @@ export default function Present({
             </b>
             {" / "}
             {String(MIN_WORDS).padStart(3, "0")}
+            {value.length > MAX_THESIS_CHARS * 0.8 && (
+              <span className={value.length >= MAX_THESIS_CHARS ? "text-bad" : "text-faint"}>
+                {" · "}
+                {value.length.toLocaleString("en-US")} / {MAX_THESIS_CHARS.toLocaleString("en-US")} characters
+              </span>
+            )}
           </span>
           <span className="relative h-px w-[110px] bg-line" aria-hidden="true">
             <span
