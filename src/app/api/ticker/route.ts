@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getNansenAdapter } from "@/lib/nansen/adapter";
 import { rateLimited } from "@/lib/rate-limit";
+import { pairContext } from "@/lib/dexscreener";
 
 /* Ticker resolve for the desk's opening window ("what are we looking at?").
    Security posture: zod + strict ticker charset, per-IP + daily rate limits,
    response carries only public market data, key stays server-side.
-   Cheap by design — one screener call, no LLM. */
+   Cheap by design — screener fan-out + one Dexscreener pair lookup, no LLM. */
 
 const BodySchema = z.object({
   symbol: z
@@ -37,12 +38,16 @@ export async function POST(req: Request) {
     const adapter = getNansenAdapter();
     const token = await adapter.resolveToken(symbol);
     if (!token) return NextResponse.json({ found: false, symbol });
+    /* where it trades — best-effort, never blocks the acknowledgment */
+    const pairs = adapter.isMock ? { pools: [], poolCount: 0 } : await pairContext(token.chain, token.address);
     return NextResponse.json({
       found: true,
       symbol: token.symbol,
       chain: token.chain,
       marketCapUsd: token.marketCapUsd,
       live: !adapter.isMock,
+      pools: pairs.pools,
+      poolCount: pairs.poolCount,
     });
   } catch {
     return NextResponse.json(

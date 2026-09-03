@@ -2,7 +2,8 @@
 
 /* The desk's opening window — "what are we looking at?"
    One pixel-box dialog after the door: name the vehicle, the desk checks
-   the tape and acknowledges it live, then the page assembles. Narrative
+   the tape and acknowledges it live (Nansen: the market; Dexscreener: the
+   deepest pool it trades in), then the page assembles. Narrative
    and sector plays take the quiet hatch below. The eclipse's travel lands
    on the seed in this dialog (#id8-seed) — the orb arrives as the desk asks. */
 
@@ -11,14 +12,28 @@ import Horizon from "@/components/hud/Horizon";
 
 type Status = "asking" | "checking" | "found" | "missing" | "error";
 
+interface Pool {
+  dex: string;
+  version: string | null;
+  base: string;
+  quote: string;
+  liquidityUsd: number;
+  volume24hUsd: number;
+}
+
 interface Resolved {
   symbol: string;
   chain: string;
   marketCapUsd: number;
+  pools: Pool[];
+  poolCount: number;
 }
+
+const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 const TICKER_RE = /^[A-Za-z0-9$._-]{1,15}$/;
 const ADVANCE_MS = 1700;
+const ADVANCE_WITH_POOL_MS = 2600; // two lines to read — hold the acknowledgment a beat longer
 
 export default function TickerGate({
   onDone,
@@ -40,7 +55,7 @@ export default function TickerGate({
   /* the acknowledgment is the moment — hold it a beat, then proceed */
   useEffect(() => {
     if (status !== "found" || !resolved) return;
-    const t = setTimeout(() => onDone(resolved.symbol), ADVANCE_MS);
+    const t = setTimeout(() => onDone(resolved.symbol), resolved.pools.length ? ADVANCE_WITH_POOL_MS : ADVANCE_MS);
     return () => clearTimeout(t);
   }, [status, resolved, onDone]);
 
@@ -58,7 +73,13 @@ export default function TickerGate({
       const data = await res.json();
       if (!res.ok || data.error) throw new Error();
       if (data.found) {
-        setResolved({ symbol: data.symbol, chain: data.chain, marketCapUsd: data.marketCapUsd });
+        setResolved({
+          symbol: data.symbol,
+          chain: data.chain,
+          marketCapUsd: data.marketCapUsd,
+          pools: Array.isArray(data.pools) ? data.pools : [],
+          poolCount: typeof data.poolCount === "number" ? data.poolCount : 0,
+        });
         setStatus("found");
       } else {
         setStatus("missing");
@@ -127,6 +148,15 @@ export default function TickerGate({
         </div>
 
         <p className="m-0 min-h-[18px] font-mono text-[10px] uppercase tracking-[.1em]">{tapeLine}</p>
+        {status === "found" && resolved && resolved.pools[0] && (
+          <p className="door-in m-0 mt-1.5 font-mono text-[10px] uppercase tracking-[.1em] text-muted" style={{ animationDelay: "0.35s" }}>
+            <span className="text-faint">deepest pool</span> {resolved.pools[0].base}/{resolved.pools[0].quote} ·{" "}
+            {resolved.pools[0].dex}
+            {resolved.pools[0].version ? ` ${resolved.pools[0].version}` : ""} · {usd(resolved.pools[0].liquidityUsd)} liq ·{" "}
+            {usd(resolved.pools[0].volume24hUsd)} 24h
+            {resolved.poolCount > 1 && <span className="text-faint"> · {resolved.poolCount} pools</span>}
+          </p>
+        )}
 
         {status !== "found" && (
           <button
