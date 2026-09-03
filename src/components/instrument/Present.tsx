@@ -34,6 +34,7 @@ export default function Present({
   onChange,
   onCommit,
   ticker = null,
+  onChangeVehicle,
   tour = false,
   onSkipTour,
 }: {
@@ -41,6 +42,8 @@ export default function Present({
   onChange: (v: string) => void;
   onCommit: () => void;
   ticker?: string | null;
+  /* reopen the window — name a ticker, or change the one named */
+  onChangeVehicle?: () => void;
   tour?: boolean;
   onSkipTour?: () => void;
 }) {
@@ -74,6 +77,19 @@ export default function Present({
           )}
           <em className="not-italic text-lock-deep">we&apos;ll ask the hard questions after.</em>
         </h2>
+
+        {onChangeVehicle && (
+          <p className="m-0 -mt-[22px] mb-[26px] font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
+            <span className="text-faint">vehicle</span>{" "}
+            <span className="text-muted">{ticker ? `$${ticker}` : "a narrative, not a name"}</span>
+            <button
+              onClick={onChangeVehicle}
+              className="ml-3 whitespace-nowrap border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
+            >
+              {ticker ? "[ change ]" : "[ name a ticker ]"}
+            </button>
+          </p>
+        )}
 
         <textarea
           id="id8-input"

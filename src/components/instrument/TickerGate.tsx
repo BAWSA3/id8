@@ -158,7 +158,10 @@ export default function TickerGate({
           </p>
         )}
 
-        {status !== "found" && (
+        {/* the hatch is for a trader with nothing to name — once there's a ticker in
+            the field it steps aside, so it can't be hit by accident (it returns if the
+            tape can't find the name) */}
+        {status !== "found" && (value.trim().length === 0 || status === "missing") && (
           <button
             onClick={() => onDone(null)}
             className="mt-5 border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-colors hover:text-muted focus-visible:text-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"

@@ -227,6 +227,7 @@ export default function Session() {
             onChange={setThesis}
             onCommit={() => setStage("clarify")}
             ticker={ticker ?? null}
+            onChangeVehicle={() => setTicker(undefined)}
             tour={tour}
             onSkipTour={endTour}
           />
