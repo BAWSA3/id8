@@ -30,7 +30,7 @@ interface Props {
 }
 
 const LABEL = "m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint";
-const VERB = "border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock";
+const VERB = "whitespace-nowrap border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock";
 const AREA =
   "mt-2 w-full resize-none border-0 border-b border-line bg-transparent pb-2 text-[15px] leading-relaxed text-ink outline-none [caret-color:var(--lock)] placeholder:text-faint focus:border-lock-deep";
 const grot = { fontFamily: "var(--grot)" } as const;
@@ -160,13 +160,13 @@ export default function Structure({ thesis, ticker, extraction, challenge, struc
                 onMouseEnter={() => setLocked(`a${i + 1}`)}
                 className={`group border-t border-line py-4 transition-opacity duration-300 ${isCut ? "opacity-40" : ""}`}
               >
-                <div className="flex items-baseline gap-3">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-mono text-[10px] text-faint">A{i + 1}</span>
-                  <span className={`font-mono text-[9.5px] uppercase tracking-[.14em] ${tag.cls}`}>{tag.text}</span>
+                  <span className={`whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[.14em] ${tag.cls}`}>{tag.text}</span>
                   {r?.kind === "hold" && verdict === "contested" && (
-                    <span className="font-mono text-[9.5px] uppercase tracking-[.14em] text-lock-deep">· held against the tape</span>
+                    <span className="whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[.14em] text-lock-deep">· held against the tape</span>
                   )}
-                  {r?.kind === "revise" && <span className="font-mono text-[9.5px] uppercase tracking-[.14em] text-lock-deep">· revised</span>}
+                  {r?.kind === "revise" && <span className="whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[.14em] text-lock-deep">· revised</span>}
                 </div>
 
                 {r?.kind === "revise" ? (
@@ -277,8 +277,8 @@ export default function Structure({ thesis, ticker, extraction, challenge, struc
                         <button onClick={() => setAnswer(i, null)} className={`${VERB} mt-2 text-faint hover:text-muted`}>[ leave it open ]</button>
                       </>
                     ) : (
-                      <div className="mt-2 flex gap-4">
-                        <button onClick={() => setAnswer(i, "")} className={`${VERB} text-muted hover:text-ink`}>[ answer ]</button>
+                      <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                        <button onClick={() => setAnswer(i, "")} className={`${VERB} whitespace-nowrap text-muted hover:text-ink`}>[ answer ]</button>
                         <span className="font-mono text-[9.5px] uppercase tracking-[.14em] text-faint">open · stays on the board as risk</span>
                       </div>
                     )}
