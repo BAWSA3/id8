@@ -14,6 +14,7 @@ const BOOT_LINES: { k: string; v: string; live?: boolean }[] = [
   { k: "booting", v: "thesis desk" },
   { k: "nansen smart money", v: "live", live: true },
   { k: "sectors tracked", v: "29" },
+  { k: "chains on the tape", v: "26" },
   { k: "holder cohorts", v: "whales · smart · fresh" },
   { k: "writes your trade", v: "never" },
 ];
