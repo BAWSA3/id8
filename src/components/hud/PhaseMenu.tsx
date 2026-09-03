@@ -13,7 +13,7 @@ export default function PhaseMenu({ activePhase }: { activePhase: number }) {
               key={p}
               disabled={state === "todo"}
               aria-current={state === "active" ? "step" : undefined}
-              className={`group flex w-full items-center gap-2.5 border px-2.5 py-2 text-left font-mono text-[11px] uppercase tracking-[.12em]
+              className={`group flex w-full items-center gap-2.5 border px-2.5 py-1.5 text-left font-mono text-[10.5px] uppercase tracking-[.12em]
                 ${state === "active" ? "border-lock text-lock" : "border-transparent"}
                 ${state === "done" ? "text-muted" : state === "todo" ? "cursor-default text-faint" : ""}`}
             >

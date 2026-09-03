@@ -71,10 +71,10 @@ export default function AgentFeed({
   }, [li, lines]);
 
   return (
-    <Panel label="the feed" className="bottom-[92px] left-10 w-[min(440px,calc(100%-80px))]">
+    <Panel label="the feed" className="bottom-[92px] left-10 top-[296px] flex w-[min(440px,calc(100%-80px))] flex-col">
       <div
         ref={scroller}
-        className="flex max-h-[min(300px,calc(100vh-600px))] min-h-[62px] flex-col gap-2 overflow-y-auto pr-1 [scrollbar-width:thin]"
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1 [scrollbar-width:thin]"
         aria-live="polite"
       >
         {lines.slice(0, Math.min(li + 1, lines.length)).map((line, i) => (
@@ -85,7 +85,7 @@ export default function AgentFeed({
           </p>
         ))}
       </div>
-      <p className="m-0 mt-3 border-t border-line pt-2.5 font-mono text-[10px] uppercase tracking-[.16em] text-muted">
+      <p className="m-0 mt-3 shrink-0 border-t border-line pt-2.5 font-mono text-[10px] uppercase tracking-[.16em] text-muted">
         what the tape found · what the skeptic doubts. <b className="font-normal text-lock">id8 will not write this for you.</b>
       </p>
       {extra}
