@@ -230,3 +230,23 @@ own words. No agent speaks in this phase; it spends no tokens.
   ledger ("04 lines in · 03 held (1 against the tape) · 00 revised · 01
   cut"), every line with its status, and "off the book if". Doc export and
   share link come with the Commit pass.
+
+## Commit — the doc (locked 2026-09-04)
+
+The doc leaves the desk two ways, and nothing is stored anywhere:
+
+- `[ copy a link ]` — the link IS the doc: the one-pager is deflated and
+  base64url-encoded into `/s?d=…` (≈1–1.5 KB). The share page renders on
+  the server (readable on a phone, readable without JS) with the thesis
+  after the tape, the ledger, every line with its status and its receipts
+  (exact figures from the tape), open questions, "off the book if", and the
+  analyst/skeptic lines. Footer: "pressure-tested on id8 · live nansen
+  tape · writes your trade: never · [ open the desk ]".
+- `[ copy as markdown ]` — the same doc as markdown, receipts included,
+  link in the footer.
+- The unfurl card (`/api/og?d=`) carries the thesis, the ledger line, and
+  the invalidation on darkroom black — the receipts stay on the page.
+- If the clipboard refuses, the link is shown in the open instead of
+  failing quietly: "the clipboard said no — the link is right here".
+- Nothing marketing-shaped on the share page: no signup wall, no counters.
+  One quiet door back to the desk.
