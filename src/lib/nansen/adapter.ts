@@ -126,6 +126,28 @@ const num = (v: unknown): number => (typeof v === "number" && Number.isFinite(v)
 const usd = (v: unknown): number => Math.round(num(v));
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
+/* Every chain the token-screener accepts (422 lists them; "all" is rejected there).
+   Sampled live 2026-09-03. Robinhood chain carries tokenized equities (NVDA, SPY). */
+export const NANSEN_CHAINS = [
+  "ethereum", "solana", "base", "bnb", "arbitrum",
+  "hyperevm", "monad", "robinhood", "plasma", "polygon",
+  "avalanche", "optimism", "sonic", "sui", "ton",
+  "tron", "linea", "mantle", "sei", "near",
+  "injective", "mantra", "iotaevm", "starknet", "citrea", "bitcoin",
+] as const;
+
+/* Chain-native coins don't sit on the spot tape under their own symbol — the
+   wrapped token on the home chain is the market. Verified live 2026-09-03;
+   ETH/SOL are excluded by the screener's native filter and stay unresolved. */
+const NATIVE_ALIASES: Record<string, { symbol: string; chain: string }> = {
+  HYPE: { symbol: "WHYPE", chain: "hyperevm" },
+  MON: { symbol: "WMON", chain: "monad" },
+  BNB: { symbol: "WBNB", chain: "bnb" },
+  AVAX: { symbol: "WAVAX", chain: "avalanche" },
+  TRX: { symbol: "WTRX", chain: "tron" },
+  XPL: { symbol: "WXPL", chain: "plasma" },
+};
+
 export class LiveNansenAdapter implements NansenAdapter {
   readonly isMock = false;
 
@@ -155,15 +177,31 @@ export class LiveNansenAdapter implements NansenAdapter {
   }
 
   async resolveToken(symbol: string): Promise<TokenMarket | null> {
-    const json = (await nansenPost("/token-screener", {
-      chains: ["ethereum", "solana", "base", "bnb", "arbitrum"],
-      timeframe: "7d",
-      filters: { token_symbol: [symbol] },
-      order_by: [{ field: "market_cap_usd", direction: "DESC" }],
-      pagination: { page: 1, per_page: 1 },
-    })) as { data?: Raw[] };
-    const r = json.data?.[0];
-    if (!r) return null;
+    /* the screener takes at most 5 chains per call — fan out across every chain
+       Nansen indexes, tolerate per-batch failures, take the largest market */
+    const alias = NATIVE_ALIASES[symbol];
+    const batches: string[][] = [];
+    if (alias) batches.push([alias.chain]);
+    else for (let i = 0; i < NANSEN_CHAINS.length; i += 5) batches.push(NANSEN_CHAINS.slice(i, i + 5));
+    const settled = await Promise.allSettled(
+      batches.map((chains) =>
+        nansenPost("/token-screener", {
+          chains,
+          timeframe: "7d",
+          filters: { token_symbol: [alias ? alias.symbol : symbol] },
+          order_by: [{ field: "market_cap_usd", direction: "DESC" }],
+          pagination: { page: 1, per_page: 3 },
+        }) as Promise<{ data?: Raw[] }>
+      )
+    );
+    const rows = settled.flatMap((r) => (r.status === "fulfilled" ? r.value.data ?? [] : []));
+    if (!rows.length) {
+      if (settled.every((r) => r.status === "rejected")) {
+        throw (settled[0] as PromiseRejectedResult).reason;
+      }
+      return null;
+    }
+    const r = rows.sort((a, b) => num(b.market_cap_usd) - num(a.market_cap_usd))[0];
     return {
       symbol: str(r.token_symbol),
       chain: str(r.chain),
