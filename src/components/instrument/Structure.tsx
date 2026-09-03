@@ -83,12 +83,12 @@ export default function Structure({ thesis, ticker, extraction, challenge, struc
 
       {/* ---------- the column ---------- */}
       <div className="min-w-0">
-        <p className="m-0 mb-[22px] flex items-baseline font-mono text-[10px] uppercase tracking-[.22em] text-muted">
-          <span>
+        <p className="m-0 mb-[22px] flex flex-wrap items-baseline gap-x-6 gap-y-2 font-mono text-[10px] uppercase tracking-[.22em] text-muted">
+          <span className="whitespace-nowrap">
             <span className="seed mr-2.5 align-[1px]" />
             structure — the ruling
           </span>
-          <button onClick={onBack} className={`${VERB} ml-auto text-faint hover:text-muted`}>[ back to the board ]</button>
+          <button onClick={onBack} className={`${VERB} ml-auto whitespace-nowrap text-faint hover:text-muted`}>[ back to the board ]</button>
         </p>
 
         <div className="pixel-box mb-7 border border-line px-4 py-3" style={{ background: "var(--bg)" }}>
