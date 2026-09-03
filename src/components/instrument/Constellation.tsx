@@ -157,13 +157,12 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
       for (const n of [...nodes].sort((a, b) => (a.id === locked ? -1 : b.id === locked ? 1 : P[a.id].z - P[b.id].z))) {
         const p = P[n.id], r = (n.kind === "core" ? 10 : 7) * p.s;
         const w = Math.max(n.label.length, n.sub.length) * charW;
-        const candidates: { x: number; y: number; align: "left" | "right" }[] = [
-          { x: p.x + r + 9, y: p.y - 2, align: "left" },
-          { x: p.x - r - 9, y: p.y - 2, align: "right" },
-          { x: p.x + r + 9, y: p.y - 2 + boxH, align: "left" },
-          { x: p.x - r - 9, y: p.y - 2 + boxH, align: "right" },
-          { x: p.x + r + 9, y: p.y - 2 - boxH, align: "left" },
-        ];
+        /* right, left, then one and two steps down and up on each side */
+        const candidates: { x: number; y: number; align: "left" | "right" }[] = [];
+        for (const dy of [0, 1, -1, 2, -2]) {
+          candidates.push({ x: p.x + r + 9, y: p.y - 2 + dy * boxH, align: "left" });
+          candidates.push({ x: p.x - r - 9, y: p.y - 2 + dy * boxH, align: "right" });
+        }
         let pick = candidates[0];
         for (const cnd of candidates) {
           const box = { x: cnd.align === "left" ? cnd.x : cnd.x - w, y: cnd.y - lineH + 2, w, h: boxH };
