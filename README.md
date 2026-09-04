@@ -19,24 +19,24 @@ is typed by the trader. No coins, entries, exits, or sizes are ever suggested.
 One continuous take, five phases, the room getting more instrumented as
 scrutiny increases, then exhaling:
 
-1. **the window**, `what are we looking at?` Name a ticker (any of the 26
+1. **the window.** `what are we looking at?` Name a ticker (any of the 26
    chains Nansen indexes, Robinhood chain included) or trade a narrative.
    The desk resolves it against the tape and shows the deepest pool.
-2. **present**, write the play in your own words. 25-word minimum; a
+2. **present.** write the play in your own words. 25-word minimum; a
    headline isn't a thesis.
-3. **clarify**, the clarifier asks one desk-head question at a time (four
+3. **clarify.** the clarifier asks one desk-head question at a time (four
    at most): narrative life-cycle, vehicle choice, timing, invalidation.
    Then it structures *your* words into a contract: claim, vehicle,
    narrative, assumptions (each with a verbatim "from your words"),
    invalidation, open questions. You can strike any line before signing.
-4. **the board / challenge**, the analyst reads the tape and pins evidence
+4. **the board / challenge.** the analyst reads the tape and pins evidence
    to the assumptions it tests (supports / contradicts / inconclusive, exact
    figures only). The skeptic attacks the weakest line. Target-lock any node
    for its dossier.
-5. **the ruling**, you rule on every line: `[ hold ]` (a contested hold
+5. **the ruling.** you rule on every line: `[ hold ]` (a contested hold
    needs a reason), `[ revise ]`, or `[ cut ]`. Answer open questions or
    leave them. Name what takes it off the book. Zero tokens spent here.
-6. **on the book**, the doc: thesis after the tape, the ledger
+6. **on the book.** the doc: thesis after the tape, the ledger
    (`05 lines in · 04 held (1 against the tape) · 00 revised · 01 cut`),
    every line with its status and receipts. `[ copy a link ]`, the link *is*
    the doc, nothing is stored. `[ copy as markdown ]`.
