@@ -280,6 +280,8 @@ export default function Session() {
         )}
         {shownView === "commit" && extraction && (
           <Commit
+            thesis={thesis}
+            qa={qa}
             ticker={ticker ?? null}
             extraction={extraction}
             challenge={challenge}

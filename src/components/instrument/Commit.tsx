@@ -4,12 +4,18 @@
    page, with the ledger of what survived. The doc leaves the desk two ways:
    as markdown, or as a link that carries the whole doc (nothing stored). */
 
-import { useState } from "react";
-import { lineAfter, lineVerdict, type Challenge, type Extraction, type StructureState } from "@/lib/session";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { lineAfter, lineVerdict, type Challenge, type Extraction, type QA, type StructureState } from "@/lib/session";
 import { buildDoc, buildMarkdown, encodeDoc } from "@/lib/doc";
+import { currentUser, savePlay } from "@/lib/desk";
+import { supabaseConfigured } from "@/lib/supabase/client";
+import DeskAsk from "@/components/desk/DeskAsk";
 import Horizon from "@/components/hud/Horizon";
 
 interface Props {
+  thesis: string;
+  qa: QA[];
   ticker: string | null;
   extraction: Extraction;
   challenge: Challenge | null;
@@ -21,8 +27,35 @@ const LABEL = "m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-f
 
 type Copied = "doc" | "link" | "denied" | null;
 
-export default function Commit({ ticker, extraction, challenge, structure, onBack }: Props) {
+type DeskState = "checking" | "anon" | "saving" | "saved" | "skipped" | "unwired" | "error";
+
+export default function Commit({ thesis, qa, ticker, extraction, challenge, structure, onBack }: Props) {
   const [link, setLink] = useState<string | null>(null);
+  /* the desk: a signed-in trader's play goes on the book now; anyone else is asked once */
+  const [desk, setDesk] = useState<DeskState>("checking");
+  useEffect(() => {
+    let alive = true;
+    const run = async () => {
+      if (!supabaseConfigured()) return setDesk("unwired");
+      const user = await currentUser();
+      if (!alive) return;
+      if (!user) return setDesk("anon");
+      setDesk("saving");
+      try {
+        await savePlay({ thesis, ticker, qa, extraction, challenge, structure });
+        if (alive) setDesk("saved");
+      } catch {
+        if (alive) setDesk("error");
+      }
+    };
+    const t = setTimeout(() => void run(), 0);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+    // the booked play is fixed at this point; re-running on edits would double-write
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [copied, setCopied] = useState<Copied>(null);
   const [busy, setBusy] = useState(false);
 
@@ -135,6 +168,32 @@ export default function Commit({ ticker, extraction, challenge, structure, onBac
         <p className={LABEL}>off the book if</p>
         <p className="m-0 text-[15px] leading-relaxed">{structure.invalidation.trim()}</p>
       </div>
+
+      {desk !== "unwired" && (
+        <div className="door-in mb-10" style={{ animationDelay: `${0.9 + (lines.length + extraction.openQuestions.length) * 0.15}s` }}>
+          <p className={LABEL}>the desk</p>
+          {desk === "anon" && <DeskAsk onSkip={() => setDesk("skipped")} />}
+          {desk === "skipped" && (
+            <p className="m-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">the play stays in this browser. the desk will ask again next time.</p>
+          )}
+          {(desk === "checking" || desk === "saving") && (
+            <p className="m-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
+              putting it on the book<span className="blink ml-1" />
+            </p>
+          )}
+          {desk === "saved" && (
+            <div className="flex flex-wrap items-baseline gap-4">
+              <Link href="/desk" className="border border-lock-deep px-5 py-2.5 font-mono text-[11px] uppercase tracking-[.2em] text-lock-deep transition-colors hover:bg-lock-deep hover:text-bg">
+                [ open the desk ]
+              </Link>
+              <span className="font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">on the book. the desk reads the tape each time you come back.</span>
+            </div>
+          )}
+          {desk === "error" && (
+            <p className="m-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-bad">the desk could not take the play. it stays in this browser for now.</p>
+          )}
+        </div>
+      )}
 
       <div className="door-in" style={{ animationDelay: `${1 + (lines.length + extraction.openQuestions.length) * 0.15}s` }}>
         <p className={LABEL}>the doc</p>
