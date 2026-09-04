@@ -188,7 +188,7 @@ export default function Desk() {
 
       <div className="relative z-10 grid gap-6 md:grid-cols-[240px_minmax(0,1fr)_260px]">
         {/* the book */}
-        <Panel label="the book" labelRight={String(plays.length).padStart(2, "0")} className="!static">
+        <Panel label="the book" labelRight={String(plays.length).padStart(2, "0")} className="!static self-start">
           {plays.length === 0 ? (
             <p className="m-0 font-mono text-[11px] text-faint">nothing on the book yet.</p>
           ) : (
