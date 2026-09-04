@@ -9,6 +9,7 @@ import Link from "next/link";
 import { lineAfter, lineVerdict, type Challenge, type Extraction, type QA, type StructureState } from "@/lib/session";
 import { buildDoc, buildMarkdown, encodeDoc } from "@/lib/doc";
 import { currentUser, savePlay } from "@/lib/desk";
+import { saveLocalPlay } from "@/lib/book";
 import { supabaseConfigured } from "@/lib/supabase/client";
 import DeskAsk from "@/components/desk/DeskAsk";
 import Horizon from "@/components/hud/Horizon";
@@ -27,7 +28,7 @@ const LABEL = "m-0 mb-1 font-mono text-[9.5px] uppercase tracking-[.16em] text-f
 
 type Copied = "doc" | "link" | "denied" | null;
 
-type DeskState = "checking" | "anon" | "saving" | "saved" | "skipped" | "unwired" | "error";
+type DeskState = "checking" | "anon" | "saving" | "saved" | "skipped" | "error";
 
 export default function Commit({ thesis, qa, ticker, extraction, challenge, structure, onBack }: Props) {
   const [link, setLink] = useState<string | null>(null);
@@ -36,7 +37,11 @@ export default function Commit({ thesis, qa, ticker, extraction, challenge, stru
   useEffect(() => {
     let alive = true;
     const run = async () => {
-      if (!supabaseConfigured()) return setDesk("unwired");
+      if (!supabaseConfigured()) {
+        /* no store wired: the play goes on the local book */
+        saveLocalPlay({ thesis, ticker, qa, extraction, challenge, structure });
+        return setDesk("saved");
+      }
       const user = await currentUser();
       if (!alive) return;
       if (!user) return setDesk("anon");
@@ -169,7 +174,7 @@ export default function Commit({ thesis, qa, ticker, extraction, challenge, stru
         <p className="m-0 text-[15px] leading-relaxed">{structure.invalidation.trim()}</p>
       </div>
 
-      {desk !== "unwired" && (
+      {(
         <div className="door-in mb-10" style={{ animationDelay: `${0.9 + (lines.length + extraction.openQuestions.length) * 0.15}s` }}>
           <p className={LABEL}>the desk</p>
           {desk === "anon" && <DeskAsk onSkip={() => setDesk("skipped")} />}
@@ -230,7 +235,7 @@ export default function Commit({ thesis, qa, ticker, extraction, challenge, stru
               ? "copied · markdown, receipts included"
               : copied === "denied"
                 ? "the clipboard said no. the link is right here."
-                : "the link is the doc. nothing is stored anywhere."}
+                : "the link is the doc. it carries everything, no account needed."}
         </p>
         {copied === "denied" && link && (
           <input

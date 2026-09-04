@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SESSION_STORE_KEY, sessionSlug } from "@/lib/session";
 import Horizon from "@/components/hud/Horizon";
+import { localBookCount } from "@/lib/book";
 
 /* Boot readout — the door's whisper layer. Doubles as the only product
    explanation a cold visitor gets: live feed, real coverage, the hard rule. */
@@ -69,6 +70,11 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
   const [primed, setPrimed] = useState(false);
   /* one door: the button acknowledges a session in progress and resumes it */
   const [resumeSlug, setResumeSlug] = useState<string | null>(null);
+  const [bookCount, setBookCount] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setBookCount(localBookCount()), 0);
+    return () => clearTimeout(t);
+  }, []);
   const started = useRef(false);
 
   useEffect(() => {
@@ -156,6 +162,15 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
           <p className="door-in m-0 mt-[16px] font-mono text-[9.5px] uppercase tracking-[.18em] text-faint" style={{ animationDelay: "0.74s" }}>
             session 001 · {resumeSlug}
           </p>
+        )}
+        {bookCount > 0 && (
+          <a
+            href="/desk"
+            className="door-in mt-[14px] border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.18em] text-faint transition-colors hover:text-muted focus-visible:text-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
+            style={{ animationDelay: "0.86s" }}
+          >
+            [ the book · {String(bookCount).padStart(2, "0")} {bookCount === 1 ? "play" : "plays"} ]
+          </a>
         )}
         <BootReadout />
       </div>

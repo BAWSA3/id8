@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { currentUser, listPlays, savePlay, signOut, type Play, type PlaySession } from "@/lib/desk";
 import { supabaseConfigured } from "@/lib/supabase/client";
+import { listLocalPlays, removeLocalPlay } from "@/lib/book";
 import { buildDoc, encodeDoc, ledgerLine } from "@/lib/doc";
 import { SESSION_STORE_KEY } from "@/lib/session";
 import Panel from "@/components/hud/Panel";
@@ -16,10 +17,18 @@ import DocView from "./DocView";
 import DeskAsk from "./DeskAsk";
 import Orb from "./Orb";
 
-type State = "loading" | "ask" | "room" | "unwired";
+type State = "loading" | "ask" | "room";
 
-/* a play booked in this browser before sign-in joins the desk on arrival */
+/* plays booked in this browser before sign-in join the desk on arrival */
 async function adoptLocalPlay(): Promise<void> {
+  for (const p of listLocalPlays()) {
+    try {
+      const saved = await savePlay(p.session, { chain: p.chain, sector: p.sector });
+      if (saved) removeLocalPlay(p.id);
+    } catch {
+      /* stays local, tried again next visit */
+    }
+  }
   try {
     const raw = localStorage.getItem(SESSION_STORE_KEY);
     if (!raw) return;
@@ -43,11 +52,17 @@ export default function Desk() {
   const [plays, setPlays] = useState<Play[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  /* browser-only: no store wired, the local book is the desk */
+  const [local, setLocal] = useState(false);
   const router = useRouter();
 
   const load = useCallback(async () => {
     if (!supabaseConfigured()) {
-      setState("unwired");
+      const list = listLocalPlays();
+      setLocal(true);
+      setPlays(list);
+      setSelected((cur) => cur ?? list[0]?.id ?? null);
+      setState("room");
       return;
     }
     const user = await currentUser();
@@ -100,23 +115,12 @@ export default function Desk() {
     );
   }
 
-  if (state === "unwired") {
-    return (
-      <main className="mx-auto flex min-h-[70vh] w-full max-w-[660px] flex-col justify-center px-8">
-        <p className="m-0 font-mono text-[12.5px] text-muted">
-          <span className="font-pixel text-[10px]">the desk ›</span> not wired to a store yet. the play stays in this browser.
-        </p>
-        <Link href="/" className="mt-6 font-mono text-[10.5px] uppercase tracking-[.18em] text-lock-deep hover:text-lock">
-          [ back to the desk ]
-        </Link>
-      </main>
-    );
-  }
-
   if (state === "ask") {
     return (
       <main className="relative mx-auto flex min-h-[70vh] w-full max-w-[560px] flex-col justify-center px-8">
-        <Orb size={420} className="-right-40 -top-24" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <Orb size={420} className="-right-40 -top-24" />
+        </div>
         <p className="relative m-0 mb-6 font-mono text-[10px] uppercase tracking-[.22em] text-muted">
           <span className="seed mr-2.5 align-[1px]" />
           the desk
@@ -133,7 +137,10 @@ export default function Desk() {
 
   return (
     <main className="relative mx-auto w-full max-w-[1280px] px-6 pb-16 pt-6 md:px-10">
-      <Orb size={560} className="-right-52 top-10 hidden md:block" />
+      {/* the character, behind everything, clipped to the room */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <Orb size={640} className="-right-40 -top-24 hidden md:block" />
+      </div>
 
       {/* top bar */}
       <div className="relative z-10 mb-8 flex flex-wrap items-baseline gap-x-5 gap-y-2">
@@ -142,16 +149,19 @@ export default function Desk() {
         </h1>
         <span className="font-mono text-[10px] uppercase tracking-[.16em] text-faint">
           the desk · {String(plays.length).padStart(2, "0")} {plays.length === 1 ? "play" : "plays"}
+          {local && " · in this browser"}
         </span>
         <button onClick={newPlay} className="ml-auto border border-lock-deep px-3 py-1.5 font-mono text-[9.5px] uppercase tracking-[.16em] text-lock-deep transition-colors hover:bg-lock-deep hover:text-bg">
           [ new play ]
         </button>
-        <button
-          onClick={() => void signOut().then(() => router.push("/"))}
-          className="border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-colors hover:text-muted"
-        >
-          [ sign out ]
-        </button>
+        {!local && (
+          <button
+            onClick={() => void signOut().then(() => router.push("/"))}
+            className="border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-colors hover:text-muted"
+          >
+            [ sign out ]
+          </button>
+        )}
       </div>
 
       <div className="relative z-10 grid gap-6 md:grid-cols-[240px_minmax(0,1fr)_260px]">
