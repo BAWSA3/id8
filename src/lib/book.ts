@@ -54,3 +54,12 @@ export function saveLocalPlay(session: PlaySession, meta: { chain?: string | nul
 export function removeLocalPlay(id: string) {
   write(read().filter((p) => p.id !== id));
 }
+
+export function updateLocalPlay(id: string, patch: Partial<Play>): Play | null {
+  const list = read();
+  const i = list.findIndex((p) => p.id === id);
+  if (i < 0) return null;
+  list[i] = { ...list[i], ...patch };
+  write(list);
+  return list[i];
+}

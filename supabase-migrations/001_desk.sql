@@ -18,6 +18,7 @@ create table if not exists public.plays (
   sector text,                      -- the planner's first sector, for narrative plays
   slug text not null,               -- session slug for the card
   session jsonb not null,           -- the Stored session object: thesis, extraction, challenge, structure
+  pins jsonb not null default '[]'::jsonb, -- the wall: pinned X posts (url, author, html, text, pinned_at)
   booked_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );

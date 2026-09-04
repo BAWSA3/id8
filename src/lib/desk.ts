@@ -4,6 +4,7 @@
 
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { sessionSlug, type Challenge, type Extraction, type QA, type StructureState } from "@/lib/session";
+import type { Pin } from "@/lib/pins";
 
 export interface PlaySession {
   thesis: string;
@@ -21,6 +22,7 @@ export interface Play {
   sector: string | null;
   slug: string;
   session: PlaySession;
+  pins?: Pin[];
   booked_at: string;
 }
 
@@ -76,11 +78,16 @@ export async function savePlay(session: PlaySession, meta: { chain?: string | nu
   return data as Play;
 }
 
+export async function updatePlayPins(id: string, pins: Pin[]): Promise<void> {
+  const { error } = await supabaseBrowser().from("plays").update({ pins }).eq("id", id);
+  if (error) throw error;
+}
+
 export async function listPlays(): Promise<Play[]> {
   const sb = supabaseBrowser();
   const { data, error } = await sb
     .from("plays")
-    .select("id, ticker, chain, sector, slug, session, booked_at")
+    .select("id, ticker, chain, sector, slug, session, pins, booked_at")
     .order("booked_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as Play[];

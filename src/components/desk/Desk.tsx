@@ -7,9 +7,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { currentUser, listPlays, savePlay, signOut, type Play, type PlaySession } from "@/lib/desk";
+import { currentUser, listPlays, savePlay, signOut, updatePlayPins, type Play, type PlaySession } from "@/lib/desk";
+import type { Pin } from "@/lib/pins";
+import Wall from "./Wall";
 import { supabaseConfigured } from "@/lib/supabase/client";
-import { listLocalPlays, removeLocalPlay } from "@/lib/book";
+import { listLocalPlays, removeLocalPlay, updateLocalPlay } from "@/lib/book";
 import { buildDoc, encodeDoc, ledgerLine } from "@/lib/doc";
 import { SESSION_STORE_KEY } from "@/lib/session";
 import Panel from "@/components/hud/Panel";
@@ -93,6 +95,26 @@ export default function Desk() {
       localStorage.removeItem(SESSION_STORE_KEY);
     } catch {}
     router.push("/");
+  };
+
+  /* the wall: pins live on the play, in the book or the store */
+  const setPins = async (playId: string, pins: Pin[]) => {
+    setPlays((cur) => cur.map((p) => (p.id === playId ? { ...p, pins } : p)));
+    if (local) updateLocalPlay(playId, { pins });
+    else {
+      try {
+        await updatePlayPins(playId, pins);
+      } catch {}
+    }
+  };
+  const pinPost = (playId: string, pin: Omit<Pin, "id" | "pinnedAt">) => {
+    const cur = plays.find((p) => p.id === playId)?.pins ?? [];
+    const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `pin-${Date.now()}`;
+    void setPins(playId, [{ ...pin, id, pinnedAt: new Date().toISOString() }, ...cur]);
+  };
+  const unpinPost = (playId: string, pinId: string) => {
+    const cur = plays.find((p) => p.id === playId)?.pins ?? [];
+    void setPins(playId, cur.filter((p) => p.id !== pinId));
   };
 
   const copyLink = async () => {
@@ -185,7 +207,9 @@ export default function Desk() {
                       booked {p.booked_at.slice(0, 10)}
                     </p>
                     <p className="m-0 mt-1 font-mono text-[9.5px] uppercase tracking-[.12em] text-muted">{ledgerLine(d).split(" · ").slice(1, 4).join(" · ")}</p>
-                    <p className="m-0 mt-1 font-mono text-[9.5px] uppercase tracking-[.12em] text-faint">watch · not read yet</p>
+                    <p className="m-0 mt-1 font-mono text-[9.5px] uppercase tracking-[.12em] text-faint">
+                      watch · not read yet{(p.pins?.length ?? 0) > 0 && ` · ${String(p.pins!.length).padStart(2, "0")} pinned`}
+                    </p>
                   </button>
                 );
               })}
@@ -233,6 +257,13 @@ export default function Desk() {
           </Panel>
         </div>
       </div>
+
+      {/* the wall, full width under the room */}
+      {play && (
+        <div className="relative z-10 mt-6">
+          <Wall pins={play.pins ?? []} onPin={(p) => pinPost(play.id, p)} onUnpin={(id) => unpinPost(play.id, id)} />
+        </div>
+      )}
     </main>
   );
 }
