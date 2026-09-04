@@ -115,7 +115,7 @@ export function ledgerLine(doc: Doc): string {
 
 export function buildMarkdown(doc: Doc, link?: string): string {
   const out: string[] = [];
-  out.push(`# ${doc.ticker ? `$${doc.ticker} — ` : ""}the thesis, after the tape`);
+  out.push(`# ${doc.ticker ? `$${doc.ticker} · ` : ""}the thesis, after the tape`);
   out.push("");
   out.push(`> ${doc.claim}`);
   out.push("");
@@ -127,7 +127,7 @@ export function buildMarkdown(doc: Doc, link?: string): string {
   out.push("");
   out.push(`## the lines`);
   for (const l of doc.lines) {
-    out.push(`- **A${l.n} · ${STATUS_TEXT[l.status]}** — ${l.status === "cut" ? `~~${l.text}~~` : l.text}`);
+    out.push(`- **A${l.n} · ${STATUS_TEXT[l.status]}**: ${l.status === "cut" ? `~~${l.text}~~` : l.text}`);
     if (l.reason) out.push(`  - held because: ${l.reason}`);
     if (l.before) out.push(`  - as written before the tape: ${l.before}`);
     for (const r of l.receipts) {

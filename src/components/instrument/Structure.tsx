@@ -86,7 +86,7 @@ export default function Structure({ thesis, ticker, extraction, challenge, struc
         <p className="m-0 mb-[22px] flex flex-wrap items-baseline gap-x-6 gap-y-2 font-mono text-[10px] uppercase tracking-[.22em] text-muted">
           <span className="whitespace-nowrap">
             <span className="seed mr-2.5 align-[1px]" />
-            structure — the ruling
+            structure · the ruling
           </span>
           <button onClick={onBack} className={`${VERB} ml-auto whitespace-nowrap text-faint hover:text-muted`}>[ back to the board ]</button>
         </p>
@@ -94,7 +94,7 @@ export default function Structure({ thesis, ticker, extraction, challenge, struc
         <div className="pixel-box mb-7 border border-line px-4 py-3" style={{ background: "var(--bg)" }}>
           <p className="m-0 font-mono text-[12.5px] leading-relaxed">
             <span className="font-pixel text-[10px] text-muted">the desk ›</span>{" "}
-            <span className="text-ink">the tape&rsquo;s in. rule on each line — hold it, rewrite it, or cut it. your words only.</span>
+            <span className="text-ink">the tape&rsquo;s in. rule on each line. hold it, rewrite it, or cut it. your words only.</span>
           </p>
         </div>
 
@@ -322,7 +322,7 @@ export default function Structure({ thesis, ticker, extraction, challenge, struc
             [ put it on the book ]
           </button>
           <span className="font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
-            {gate.ok ? "every line ruled · invalidation set" : `before that: ${gate.missing.join(" · ")}`}
+            {gate.ok ? "every line ruled. invalidation set." : `before that: ${gate.missing.join(" · ")}`}
           </span>
         </div>
       </div>

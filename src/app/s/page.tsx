@@ -16,7 +16,7 @@ const trim = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd
 export async function generateMetadata({ searchParams }: { searchParams: Search }): Promise<Metadata> {
   const { d } = await searchParams;
   const doc = decodeDoc(d);
-  if (!doc) return { title: "id8 — nothing on the book at this link" };
+  if (!doc) return { title: "id8 · nothing on the book at this link" };
   const title = `${doc.ticker ? `$${doc.ticker} · ` : ""}${trim(doc.claim, 80)}`;
   const description = `${ledgerLine(doc)} · off the book if: ${trim(doc.invalidation, 90)} · pressure-tested on id8`;
   const og = `/api/og?d=${encodeURIComponent(d!)}`;

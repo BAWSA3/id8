@@ -130,7 +130,7 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
           ref={orbRef}
           className={`orb breathing door-in mb-[34px] size-[76px] ${primed ? "primed" : ""}`}
           style={{ animationDelay: "0.05s" }}
-          aria-label="id8 — the eclipse"
+          aria-label="id8, the eclipse"
         >
           <span className="orb-trail" />
           <span className="orb-core" />

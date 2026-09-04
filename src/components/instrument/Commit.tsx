@@ -77,7 +77,7 @@ export default function Commit({ ticker, extraction, challenge, structure, onBac
       <Horizon fixed />
       <p className="m-0 mb-[26px] font-mono text-[10px] uppercase tracking-[.22em] text-muted">
         <span className="seed mr-2.5 align-[1px]" />
-        commit — on the book
+        commit · on the book
       </p>
 
       <div className="door-in">
@@ -166,11 +166,11 @@ export default function Commit({ ticker, extraction, challenge, structure, onBac
         </div>
         <p className="m-0 mt-3 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint" aria-live="polite">
           {copied === "link"
-            ? "copied · the link carries the whole doc — nothing is stored"
+            ? "copied. the link carries the whole doc. nothing is stored."
             : copied === "doc"
               ? "copied · markdown, receipts included"
               : copied === "denied"
-                ? "the clipboard said no — the link is right here"
+                ? "the clipboard said no. the link is right here."
                 : "the link is the doc. nothing is stored anywhere."}
         </p>
         {copied === "denied" && link && (

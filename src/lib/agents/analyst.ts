@@ -9,6 +9,7 @@ import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { plain } from "./plain";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { getNansenAdapter, MockNansenAdapter, type NansenAdapter } from "@/lib/nansen/adapter";
 import { planEvidence, type EvidencePlan } from "@/lib/agents/planner";
@@ -50,6 +51,7 @@ Hard rules, non-negotiable:
 - Verdicts are earned: "supports"/"contradicts" only when the cited rows actually bear on the assumption. Read flows the way a desk would: who is accumulating vs distributing, which cohort, over which window, and whether that confirms or fades the trader's narrative.
 - Each row is ONE metric: k is a short human label, v is a single number or short value copied from the data. Never put JSON fragments, brackets, field names, or multiple values in v.
 - The skeptic line attacks the weakest point of the play using only this data and the trader's own words — especially a missing or soft invalidation — and ends with a question. Sharp, not cruel. If an <invalidation> is given, never claim none was named: attack whether it is observable, early enough, or already breached by this data.
+- Never use em dashes, en dashes, or double hyphens. Write plain sentences with periods and commas.
 - USD figures always carry a $ sign and thousands separators exactly as given (-$3,759,007), never bare numbers.
 - The analyst line is neutral: what the flows show, not advice.
 - You never write, extend, or improve the trader's thesis. You NEVER suggest coins, entries, exits, or position sizes — no trade recommendations of any kind.`;
@@ -174,11 +176,11 @@ export async function runChallenge(thesis: string, extraction: Extraction, ticke
   // bound everything server-side regardless of what the model returned
   return {
     fixture,
-    analystLine: out.analystLine.slice(0, 300),
-    skepticLine: out.skepticLine.slice(0, 300),
+    analystLine: plain(out.analystLine).slice(0, 300),
+    skepticLine: plain(out.skepticLine).slice(0, 300),
     cards: out.cards.slice(0, 4).map((c) => ({
       assumptionIndex: Math.max(0, Math.min(extraction.assumptions.length, Math.round(c.assumptionIndex))),
-      title: c.title.slice(0, 60),
+      title: plain(c.title).slice(0, 60),
       source: c.source.slice(0, 80),
       rows: c.rows.slice(0, 4).map((r) => ({
         k: r.k.slice(0, 40),
@@ -186,7 +188,7 @@ export async function runChallenge(thesis: string, extraction: Extraction, ticke
         dir: r.dir,
       })),
       verdict: c.verdict,
-      note: c.note.slice(0, 300),
+      note: plain(c.note).slice(0, 300),
     })),
   };
 }

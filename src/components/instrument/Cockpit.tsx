@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FeedLine, IdeaEdge, IdeaNode } from "@/lib/session";
 import Constellation from "./Constellation";
 import Panel from "@/components/hud/Panel";
@@ -10,13 +10,16 @@ import AgentFeed from "@/components/hud/AgentFeed";
 import DeskCaption from "@/components/hud/DeskCaption";
 
 /* The flagship composition: the board center stage, HUD floating around it.
+   The board is progressive: the thesis and its lines show first; lock a line
+   and its evidence fans out, lock the thesis and the open questions do.
+   Locking another line folds the last one back. Still until dragged.
    On the first-visit tour the desk builds itself panel by panel — board,
    phases, target lock, feed — each introduced by the desk's caption.
    Any interaction fast-forwards the assembly. */
 
-const DESK_B1 = "the board. your thesis at the center, its assumptions in orbit. drag to turn it.";
-const DESK_B2 = "five phases. you're in challenge — the tape weighs in here.";
-const DESK_B3 = "click any node to target-lock it. the dossier shows what the tape found.";
+const DESK_B1 = "the board. your thesis at the center, its lines around it. drag to turn it.";
+const DESK_B2 = "five phases. you're in challenge. the tape weighs in here.";
+const DESK_B3 = "click a line to open what the tape found on it. click the thesis for the open questions.";
 const DESK_B4 = "the feed: the analyst reports what the tape found, the skeptic attacks. neither writes your trade.";
 const DESK_B5 = "that's the desk. it's yours.";
 
@@ -47,11 +50,40 @@ export default function Cockpit({
   onTourDone?: () => void;
 }) {
   const [lockedId, setLockedId] = useState<string>("thesis");
+  /* which line is open on the board (thesis = the open questions) */
+  const [openId, setOpenId] = useState<string | null>(null);
   const [yawDeg, setYawDeg] = useState(35);
   const [build, setBuild] = useState(tour ? 1 : 4);
   const [closing, setClosing] = useState(false);
   const startedClose = useRef(false);
   const locked = nodes.find((n) => n.id === lockedId);
+
+  /* the progressive board: what's on it right now, with counts on the folded lines */
+  const board = useMemo(() => {
+    const parentOf = (id: string) => edges.find((e) => e.from === id)?.to ?? null; // ev → a#/thesis, risk → thesis
+    const childCount = new Map<string, { ev: number; risk: number }>();
+    for (const n of nodes) {
+      if (n.kind !== "evidence" && n.kind !== "risk") continue;
+      const p = parentOf(n.id);
+      if (!p) continue;
+      const c = childCount.get(p) ?? { ev: 0, risk: 0 };
+      if (n.kind === "evidence") c.ev++;
+      else c.risk++;
+      childCount.set(p, c);
+    }
+    const shown = nodes.filter((n) => {
+      if (n.kind === "core" || n.kind === "assumption") return true;
+      return openId !== null && parentOf(n.id) === openId;
+    });
+    const withCounts = shown.map((n) => {
+      const c = childCount.get(n.id);
+      if (!c || n.id === openId) return n;
+      const parts = [c.ev ? `${c.ev} ev` : "", c.risk ? `${c.risk} open` : ""].filter(Boolean);
+      return parts.length ? { ...n, sub: `${n.sub} · ${parts.join(" · ")}` } : n;
+    });
+    const ids = new Set(withCounts.map((n) => n.id));
+    return { nodes: withCounts, edges: edges.filter((e) => ids.has(e.from) && ids.has(e.to)) };
+  }, [nodes, edges, openId]);
 
   /* assembly timer — each panel earns a beat */
   useEffect(() => {
@@ -76,6 +108,9 @@ export default function Cockpit({
 
   const handleLock = (id: string) => {
     setLockedId(id);
+    const n = nodes.find((x) => x.id === id);
+    /* a line or the thesis opens (and folds whatever was open); evidence keeps its parent open */
+    if (n && (n.kind === "assumption" || n.kind === "core")) setOpenId((cur) => (cur === id ? null : id));
     if (tour && build < 4) setBuild(4);
     else if (tour && id !== "thesis") setClosing(true);
   };
@@ -96,11 +131,12 @@ export default function Cockpit({
   return (
     <div className="stage relative z-10 h-[calc(100vh-88px)] max-h-[880px] min-h-[540px]">
       <Constellation
-        nodes={nodes}
-        edges={edges}
+        nodes={board.nodes}
+        edges={board.edges}
         lockedId={lockedId}
         onLock={handleLock}
         onYaw={setYawDeg}
+        initialZoom={1.3}
       />
       <div className={reveal(build >= 2)}>
         <PhaseMenu activePhase={activePhase} />
@@ -137,7 +173,7 @@ export default function Cockpit({
       </div>
       {!tour && (
         <span className="stage-hint absolute bottom-3 left-1/2 z-[15] -translate-x-1/2 whitespace-nowrap font-mono text-[9.5px] uppercase tracking-[.18em] text-faint">
-          drag to rotate · scroll to zoom · click a node to lock
+          drag to rotate · scroll to zoom · click a line to open its evidence
         </span>
       )}
       {tour && onTourDone && <DeskCaption text={caption} onSkip={onTourDone} />}

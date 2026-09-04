@@ -176,7 +176,7 @@ export function nodesFromExtraction(
         tag: { label: "core", tone: "lock" },
         body: [
           `“${structure?.claimAfter?.trim() || ex.claim}”`,
-          ex.audience !== "unstated" ? `rides: ${ex.audience}` : "narrative: unstated — worth knowing",
+          ex.audience !== "unstated" ? `rides: ${ex.audience}` : "narrative: unstated. worth knowing.",
           ...(structure?.invalidation.trim() ? [`off the book if: ${structure.invalidation.trim()}`] : []),
         ],
       },
@@ -221,7 +221,7 @@ export function nodesFromExtraction(
       pos: [Math.cos(angle) * 200, (i % 2 === 0 ? -1 : 1) * 38, Math.sin(angle) * 200],
       kind: "assumption",
       dossier: {
-        title: `A${i + 1} — ${text.slice(0, 48)}${text.length > 48 ? "…" : ""}`,
+        title: `A${i + 1} · ${text.slice(0, 48)}${text.length > 48 ? "…" : ""}`,
         sub: "assumption · extracted from your words",
         tag,
         body,
@@ -246,7 +246,7 @@ export function nodesFromExtraction(
       pos: [Math.cos(angle) * 272, (c.assumptionIndex % 2 === 0 ? -1 : 1) * (88 + i * 26), Math.sin(angle) * 272],
       kind: "evidence",
       dossier: {
-        title: `EV-${String(i + 1).padStart(2, "0")} — ${c.title}`,
+        title: `EV-${String(i + 1).padStart(2, "0")} · ${c.title}`,
         sub: `${c.source}${challenge.fixture ? " · FIXTURE DATA" : " · LIVE"}`,
         tag:
           c.verdict === "contradicts"
@@ -278,7 +278,7 @@ export function nodesFromExtraction(
         pos: [Math.cos(angle) * 335, 96 + i * 34, Math.sin(angle) * 335],
         kind: "assumption",
         dossier: {
-          title: `Q${i + 1} — answered in the ruling`,
+          title: `Q${i + 1} · answered in the ruling`,
           sub: "from an open question · unverified",
           tag: { label: "answered · unverified", tone: "neutral" },
           body: [answer, `the question: ${q}`],
@@ -294,7 +294,7 @@ export function nodesFromExtraction(
       pos: [Math.cos(angle) * 335, 96 + i * 34, Math.sin(angle) * 335],
       kind: "risk",
       dossier: {
-        title: `RISK — open question`,
+        title: `RISK · open question`,
         sub: "raised by the clarifier · unresolved",
         tag: { label: "unverified", tone: "contested" },
         body: [q],

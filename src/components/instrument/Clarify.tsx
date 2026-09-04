@@ -23,7 +23,7 @@ interface Props {
 }
 
 /* Desk captions for the first-visit tour */
-const DESK_C1 = "the clarifier goes first. answer plainly, in your own words — ⌘↵ sends.";
+const DESK_C1 = "the clarifier goes first. answer plainly, in your own words. ⌘↵ sends.";
 const DESK_C2 = "structured from your words, nothing added. read it like a contract, then take it to the board.";
 
 type Status = "asking" | "thinking" | "extracting" | "review" | "error";
@@ -128,7 +128,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
       <Horizon fixed />
       <p className="m-0 mb-[26px] font-mono text-[10px] uppercase tracking-[.22em] text-muted">
         <span className="seed mr-2.5 align-[1px]" />
-        clarify — {status === "review" ? "on paper" : "the interrogation begins"}
+        clarify · {status === "review" ? "on paper" : "the interrogation begins"}
       </p>
 
       {/* the thesis, locked */}
@@ -159,7 +159,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
       {status === "thinking" && <ThinkingLine wait="weighing your answer" />}
 
       {status === "extracting" && (
-        <ThinkingLine line="structuring your words — nothing added" wait="drawing up the contract" />
+        <ThinkingLine line="structuring your words. nothing added." wait="drawing up the contract" />
       )}
 
       {status === "asking" && question && (
@@ -224,7 +224,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
         <div className="mt-2">
           {/* the contract assembles — signed line by line */}
           <p className="door-in m-0 mb-5 font-mono text-[10px] uppercase tracking-[.2em] text-muted">
-            structured from your words — <b className="font-normal text-lock-deep">nothing added</b>
+            structured from your words. <b className="font-normal text-lock-deep">nothing added.</b>
           </p>
 
           <div className="door-in" style={{ animationDelay: "0.3s" }}>
@@ -249,7 +249,7 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
             {statedInvalidation(extraction) ? (
               <p className="m-0 mb-5 text-[15px] leading-relaxed">{statedInvalidation(extraction)}</p>
             ) : (
-              <p className="m-0 mb-5 text-[15px] leading-relaxed text-bad">unstated — the desk will ask before anything goes on the book</p>
+              <p className="m-0 mb-5 text-[15px] leading-relaxed text-bad">unstated. the desk will ask before anything goes on the book.</p>
             )}
           </div>
 
@@ -319,8 +319,8 @@ export default function Clarify({ thesis, ticker = null, qa, extraction, onQA, o
             </button>
             <span className="font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
               {struck.length >= extraction.assumptions.length
-                ? "nothing left to take up — restore a line"
-                : "strike what you didn't mean · what's left goes up as written"}
+                ? "nothing left to take up. restore a line."
+                : "strike what you didn't mean. what's left goes up as written."}
             </span>
           </div>
         </div>

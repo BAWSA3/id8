@@ -103,7 +103,7 @@ export default function TickerGate({
         </span>
       </span>
     ) : status === "missing" ? (
-      <span className="text-bad">not on the tape. spell it like the chain does — or trade the narrative.</span>
+      <span className="text-bad">not on the tape. spell it like the chain does, or trade the narrative.</span>
     ) : status === "error" ? (
       <span className="text-bad">the tape hiccupped. try again.</span>
     ) : null;

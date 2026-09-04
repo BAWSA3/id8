@@ -1,7 +1,8 @@
 "use client";
 
-/* The Cockpit centerpiece: a canvas-rendered 3D constellation of the idea.
-   Drag to rotate, scroll to zoom, hover for target brackets, click to lock. */
+/* The board: a canvas-rendered 3D map of the play. Still until you drag it,
+   scroll to zoom, hover for target brackets, click to lock. Nodes that arrive
+   (the tape landing, a line opening) ease in rather than pop. */
 
 import { useEffect, useRef } from "react";
 import type { IdeaEdge, IdeaNode } from "@/lib/session";
@@ -21,12 +22,16 @@ interface Props {
   initialZoom?: number;
 }
 
-const AUTO_ROT = 0.0028;
 const DEBRIS_COUNT = 26;
+const BORN_MS = 460;
 
 export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, initialZoom = 1 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lockedRef = useRef(lockedId);
+  /* the view and the arrival clock persist across scene rebuilds — opening a
+     line changes what's on the board, not where you're looking from */
+  const viewRef = useRef({ yaw: 0.6, pitch: -0.28, zoom: initialZoom });
+  const bornRef = useRef(new Map<string, number>());
 
   useEffect(() => {
     lockedRef.current = lockedId;
@@ -53,10 +58,11 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
     const monoFace = cs.getPropertyValue("--mono").trim() || "monospace";
 
     let W = 0, H = 0;
-    let yaw = 0.6, pitch = -0.28, zoom = initialZoom;
+    const v = viewRef.current;
     let hover: string | null = null;
     let dragging = false, lx = 0, ly = 0, moved = 0;
     let raf = 0;
+    const born = bornRef.current;
     const debris = Array.from({ length: DEBRIS_COUNT }, (_, i) => ({
       x: ((i * 97) % 100) / 100, y: ((i * 57) % 100) / 100,
       s: (i % 3) + 1, v: 0.00004 * ((i % 5) + 1),
@@ -71,13 +77,13 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
     }
 
     function project(p: [number, number, number]) {
-      const cy = Math.cos(yaw), sy = Math.sin(yaw);
-      const cp = Math.cos(pitch), sp = Math.sin(pitch);
+      const cy = Math.cos(v.yaw), sy = Math.sin(v.yaw);
+      const cp = Math.cos(v.pitch), sp = Math.sin(v.pitch);
       const x = p[0] * cy + p[2] * sy;
       let z = -p[0] * sy + p[2] * cy;
       const y = p[1] * cp - z * sp;
       z = p[1] * sp + z * cp;
-      const f = 720, s = (f / (f + z)) * zoom;
+      const f = 720, s = (f / (f + z)) * v.zoom;
       return { x: W / 2 + x * s, y: H / 2 - 30 + y * s, s, z };
     }
 
@@ -96,14 +102,8 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
 
     function frame() {
       if (!ctx) return;
-      if (!dragging && !reduced) yaw += AUTO_ROT;
       ctx.clearRect(0, 0, W, H);
-
-      /* grid */
-      ctx.strokeStyle = pal.grid; ctx.lineWidth = 1;
-      const gs = 46;
-      for (let x = (W / 2) % gs; x < W; x += gs) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-      for (let y = (H / 2) % gs; y < H; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      const now = performance.now();
 
       /* debris */
       ctx.fillStyle = pal.faint;
@@ -119,11 +119,12 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
       const core = nodes.find((n) => n.kind === "core");
       const c = core ? P[core.id] : { x: W / 2, y: H / 2, s: 1, z: 0 };
 
-      /* floating disc under core */
-      ctx.strokeStyle = pal.faint; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.ellipse(c.x, c.y + 120 * c.s, 150 * c.s, 34 * c.s, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = pal.lock; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(c.x, c.y + 120 * c.s, 150 * c.s, 34 * c.s, 0, Math.PI * 0.42, Math.PI * 0.58); ctx.stroke();
+      /* arrivals: anything not seen before starts easing in now */
+      for (const n of nodes) if (!born.has(n.id)) born.set(n.id, now);
+      const ease = (id: string) => {
+        const t = Math.min(1, (now - (born.get(id) ?? now)) / BORN_MS);
+        return reduced ? 1 : 1 - Math.pow(1 - t, 3);
+      };
 
       /* volumetric glow */
       const gr = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 170 * c.s);
@@ -139,7 +140,7 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
         ctx.lineWidth = 1;
         /* contradicts = evidence on the tape (dashed); risk = an open question, nothing verified yet (dotted, quieter) */
         ctx.setLineDash(e.kind === "contradicts" ? [5, 4] : e.kind === "risk" ? [2, 5] : []);
-        ctx.globalAlpha = e.kind === "risk" ? 0.45 : 0.8;
+        ctx.globalAlpha = (e.kind === "risk" ? 0.45 : 0.8) * Math.min(ease(e.from), ease(e.to));
         ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
         ctx.globalAlpha = 1; ctx.setLineDash([]);
       }
@@ -173,12 +174,21 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
 
       /* nodes back-to-front */
       for (const n of [...nodes].sort((a, b) => P[b.id].z - P[a.id].z)) {
-        const p = P[n.id], r = (n.kind === "core" ? 10 : 7) * p.s;
+        const k = ease(n.id);
+        const p = P[n.id], r = (n.kind === "core" ? 10 : 7) * p.s * (0.6 + 0.4 * k);
+        ctx.globalAlpha = k;
         if (n.kind === "core") {
           ctx.fillStyle = pal.ink;
           ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
         } else {
-          ctx.strokeStyle = n.kind === "risk" ? pal.bad : n.kind === "evidence" ? pal.muted : pal.ink;
+          /* the node wears its verdict: contested red, supported green, held/revised acid */
+          const tone = n.dossier.tag.tone;
+          ctx.strokeStyle =
+            n.kind === "risk" ? pal.bad
+            : tone === "contested" ? pal.bad
+            : tone === "ok" ? pal.good
+            : tone === "lock" ? pal.lock
+            : n.kind === "evidence" ? pal.muted : pal.ink;
           ctx.lineWidth = 1;
           if (n.kind === "risk") ctx.setLineDash([3, 3]);
           ctx.strokeRect(p.x - r, p.y - r, r * 2, r * 2);
@@ -202,11 +212,12 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
         }
         if (locked === n.id) drawBrackets(p.x, p.y, r, pal.lock, 1.6);
         else if (hover === n.id) drawBrackets(p.x, p.y, r, pal.lock, 1);
+        ctx.globalAlpha = 1;
       }
 
       /* axis gizmo */
       const gx = W - 64, gy = H - 52, L = 17;
-      const cy2 = Math.cos(yaw), sy2 = Math.sin(yaw), cp2 = Math.cos(pitch), sp2 = Math.sin(pitch);
+      const cy2 = Math.cos(v.yaw), sy2 = Math.sin(v.yaw), cp2 = Math.cos(v.pitch), sp2 = Math.sin(v.pitch);
       ctx.strokeStyle = pal.muted; ctx.lineWidth = 1; ctx.fillStyle = pal.muted;
       ctx.font = `8px ${monoFace}`;
       for (const [x, y, z, l] of [[L, 0, 0, "X"], [0, -L, 0, "Y"], [0, 0, L, "Z"]] as const) {
@@ -215,7 +226,7 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
         ctx.fillText(l, gx + rx * 1.35 - 2, gy + ry * 1.35 + 2);
       }
 
-      onYaw?.(Math.round((((yaw * 180) / Math.PI) % 360 + 360) % 360));
+      onYaw?.(Math.round((((v.yaw * 180) / Math.PI) % 360 + 360) % 360));
       raf = requestAnimationFrame(frame);
     }
 
@@ -239,8 +250,8 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
       if (dragging) {
         const dx = e.clientX - lx, dy = e.clientY - ly;
         moved += Math.abs(dx) + Math.abs(dy);
-        yaw += dx * 0.005;
-        pitch = Math.max(-1.1, Math.min(0.4, pitch + dy * 0.004));
+        v.yaw += dx * 0.005;
+        v.pitch = Math.max(-1.1, Math.min(0.4, v.pitch + dy * 0.004));
         lx = e.clientX; ly = e.clientY;
       } else {
         hover = pick(e.clientX - r.left, e.clientY - r.top);
@@ -258,7 +269,7 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
     };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      zoom = Math.max(0.6, Math.min(1.6, zoom - e.deltaY * 0.0012));
+      v.zoom = Math.max(0.6, Math.min(1.6, v.zoom - e.deltaY * 0.0012));
     };
 
     canvas.addEventListener("pointerdown", onDown);
@@ -285,7 +296,7 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
     <canvas
       ref={canvasRef}
       className="absolute inset-0 h-full w-full cursor-grab touch-pan-y md:touch-none [&.dragging]:cursor-grabbing"
-      aria-label="the board — drag to rotate, click a node to target-lock it"
+      aria-label="the board. drag to rotate, click a node to target-lock it"
     />
   );
 }

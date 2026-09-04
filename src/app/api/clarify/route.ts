@@ -45,8 +45,8 @@ export async function POST(req: Request) {
     let message = "Malformed request.";
     if (err instanceof z.ZodError) {
       const big = err.issues.find((i) => i.code === "too_big");
-      if (big?.path[0] === "thesis") message = `The thesis runs past ${MAX_THESIS_CHARS.toLocaleString("en-US")} characters — trim it and present again.`;
-      else if (big?.path[0] === "qa") message = `That answer runs past ${MAX_ANSWER_CHARS.toLocaleString("en-US")} characters — trim it and send again.`;
+      if (big?.path[0] === "thesis") message = `The thesis runs past ${MAX_THESIS_CHARS.toLocaleString("en-US")} characters. Trim it and present again.`;
+      else if (big?.path[0] === "qa") message = `That answer runs past ${MAX_ANSWER_CHARS.toLocaleString("en-US")} characters. Trim it and send again.`;
     }
     return NextResponse.json({ error: "invalid_request", message }, { status: 400 });
   }

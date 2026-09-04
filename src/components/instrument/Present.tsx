@@ -11,10 +11,10 @@ import DeskCaption from "@/components/hud/DeskCaption";
 import Horizon from "@/components/hud/Horizon";
 
 const CLARIFIER_TIERS = [
-  "Present your play. Raw is fine — polished is not required. I ask questions after, not before.",
-  "That's a ticker, not a thesis yet. Keep going — what's the narrative, and why now?",
+  "Present your play. Raw is fine, polished is not required. I ask questions after, not before.",
+  "That's a ticker, not a thesis yet. Keep going. What's the narrative, and why now?",
   "Getting somewhere. Why this vehicle, and what would prove you wrong?",
-  "That's presentable. Lock it in when you're ready — then the interrogation starts.",
+  "That's presentable. Lock it in when you're ready. Then the interrogation starts.",
 ];
 
 function gateTier(words: number): number {
@@ -26,8 +26,8 @@ function gateTier(words: number): number {
 
 /* Desk captions for the first-visit tour — the page assembles as you write */
 const DESK_P1 = "this is the desk. one page, one thesis. the agents wake when you write.";
-const DESK_P2 = "twenty-five words is the floor. half-formed is fine — vague is not.";
-const DESK_P3 = "the gate is open. everything on this page stays yours — id8 never writes the thesis.";
+const DESK_P2 = "twenty-five words is the floor. half-formed is fine. vague is not.";
+const DESK_P3 = "the gate is open. everything on this page stays yours. id8 never writes the thesis.";
 
 export default function Present({
   value,
@@ -64,18 +64,18 @@ export default function Present({
       <main className="mx-auto flex min-h-[70vh] w-full max-w-[660px] flex-col px-8 pt-[13vh]">
         <p className="m-0 mb-[30px] font-mono text-[10px] uppercase tracking-[.22em] text-muted">
           <span id="id8-seed" className="seed mr-2.5 align-[1px]" />
-          present — the part we can&apos;t do for you
+          present · the part we can&apos;t do for you
         </p>
         <h2 className="m-0 mb-[38px] max-w-[20em] text-[26px] font-medium leading-[1.45] tracking-[-.01em] [text-wrap:balance]">
           {ticker ? (
             <>
               What&apos;s the play on <span className="font-mono text-lock-deep">${ticker}</span>? The narrative, the
-              timing, why now —{" "}
+              timing, why now.{" "}
             </>
           ) : (
-            <>What&apos;s the play? The narrative, the vehicle, why now — </>
+            <>What&apos;s the play? The narrative, the vehicle, why now. </>
           )}
-          <em className="not-italic text-lock-deep">we&apos;ll ask the hard questions after.</em>
+          <em className="not-italic text-lock-deep">We&apos;ll ask the hard questions after.</em>
         </h2>
 
         {onChangeVehicle && (
@@ -141,7 +141,7 @@ export default function Present({
         <p
           className={`m-0 mt-3.5 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-opacity duration-700 ${showAuthorship ? "opacity-100" : "opacity-0"}`}
         >
-          authorship: <b className="font-normal text-muted">100% human</b> — id8 never writes your thesis
+          authorship: <b className="font-normal text-muted">100% human</b>. id8 never writes your thesis
         </p>
       </main>
 

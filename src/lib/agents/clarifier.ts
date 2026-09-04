@@ -8,6 +8,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { plain } from "./plain";
 
 const MODEL = "claude-opus-5";
 export const MAX_QUESTIONS = 4;
@@ -62,6 +63,7 @@ Hard rules, non-negotiable:
 - Your questions are the ones a sharp desk head asks before letting a trade on the book. Across the conversation, cover the gaps that matter most among: what exactly is the narrative and where is it in its life (forming, running, exhausted); why this vehicle and not another expression of the same narrative; what timeframe and what has to happen for the thesis to play out; what invalidates it — the level, flow, or event that proves it wrong.
 - Never repeat ground already covered by an answer. Ask about the weakest remaining spot.
 - If a <vehicle> ticker was named at the door, never ask WHAT the vehicle is — interrogate WHY that vehicle expresses this narrative better than the alternatives.
+- Never use em dashes, en dashes, or double hyphens. Write plain sentences with periods and commas.
 - Tone: calm, direct, a risk manager who has seen a thousand theses — not a cheerleader, not a robot. Fluent in how traders actually talk (meta, rotation, szn, vehicle, invalidation) without forcing slang.
 
 Termination: if ${MAX_QUESTIONS} questions have already been answered, or the answers already cover the thesis, the narrative, the vehicle choice, and the invalidation well enough to structure the play, output exactly DONE and nothing else.`;
@@ -74,7 +76,8 @@ Hard rules, non-negotiable:
 - Each assumption's "basis" must be a short verbatim quote (under 15 words) copied from the user's text. Assumptions are what the play needs to be true — about the narrative's life, the vehicle, the flows, the timing.
 - invalidation = what the trader said takes them out — the level, flow, or event that proves the play wrong — tightened from their words, never invented. If they never gave one, write exactly "unstated" and add the missing invalidation to openQuestions.
 - openQuestions are the things the trader asserted but nothing in their words verifies. Phrase each as a neutral open question, not advice.
-- 3 to 5 assumptions. 1 to 3 open questions.`;
+- 3 to 5 assumptions. 1 to 3 open questions.
+- Never use em dashes, en dashes, or double hyphens in any field. Plain sentences with periods and commas.`;
 
 export async function nextQuestion(
   thesis: string,
@@ -110,7 +113,7 @@ export async function nextQuestion(
 
   if (!text || text === "DONE") return { done: true };
   // output validation: a question, bounded, no ghostwritten content sneaking through
-  return { done: false, question: text.slice(0, 300) };
+  return { done: false, question: plain(text).slice(0, 300) };
 }
 
 export async function extract(thesis: string, qa: QA[], ticker?: string): Promise<Extraction> {
@@ -139,14 +142,14 @@ export async function extract(thesis: string, qa: QA[], ticker?: string): Promis
   const source = [thesis, ...qa.map((t) => t.a)].join("\n");
   // bound the shapes regardless of what the model returned
   return {
-    claim: ex.claim.slice(0, 600),
-    audience: ex.audience.slice(0, 300),
+    claim: plain(ex.claim).slice(0, 600),
+    audience: plain(ex.audience).slice(0, 300),
     assumptions: ex.assumptions.slice(0, 5).map((a) => ({
-      text: a.text.slice(0, 300),
-      basis: verbatimBasis(a.basis, source),
+      text: plain(a.text).slice(0, 300),
+      basis: verbatimBasis(a.basis, source), // verbatim stays verbatim, dashes and all
     })),
-    openQuestions: ex.openQuestions.slice(0, 3).map((q) => q.slice(0, 300)),
-    invalidation: (ex.invalidation || "unstated").slice(0, 300),
+    openQuestions: ex.openQuestions.slice(0, 3).map((q) => plain(q).slice(0, 300)),
+    invalidation: plain(ex.invalidation || "unstated").slice(0, 300),
   };
 }
 

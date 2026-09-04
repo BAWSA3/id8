@@ -143,7 +143,7 @@ export default function Session() {
   const feed = useMemo<FeedLine[]>(() => {
     if (challengeStatus === "ready" && challenge) {
       return [
-        { agent: "analyst", text: challenge.analystLine + (challenge.fixture ? " (fixture tape — live feed pending)" : "") },
+        { agent: "analyst", text: challenge.analystLine + (challenge.fixture ? " (fixture tape, live feed pending)" : "") },
         { agent: "skeptic", text: challenge.skepticLine },
       ];
     }

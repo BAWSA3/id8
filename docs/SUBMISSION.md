@@ -1,6 +1,6 @@
 # Submission blurb
 
-**id8 — a canvas for your thesis**
+**id8 · a canvas for your thesis**
 
 Live: https://id8-blush.vercel.app
 Code: https://github.com/BAWSA3/id8
@@ -11,12 +11,12 @@ hands you back a doc with receipts. It never writes the trade.
 
 One session, five phases: name a ticker (any of the 26 chains Nansen indexes,
 Robinhood chain included) or trade a narrative; write the thesis; get
-interrogated by the clarifier — one desk-head question at a time, four at
-most — until your words are structured into a contract; watch the analyst
+interrogated by the clarifier, one desk-head question at a time, four at
+most, until your words are structured into a contract; watch the analyst
 pin evidence from Nansen smart-money netflow, holder-cohort flow intelligence
 and the token screener to each assumption while the skeptic attacks the
-weakest line; rule on every line yourself — hold it against the tape with a
-reason, rewrite it, or cut it — and name what takes it off the book. What
+weakest line; rule on every line yourself, hold it against the tape with a
+reason, rewrite it, or cut it, and name what takes it off the book. What
 survives goes on the book as a one-pager with a ledger and exact figures,
 shareable as a link that carries the whole doc.
 

@@ -135,6 +135,10 @@ comes from this register, with one exception: the tagline
 - No exclamation marks anywhere. No marketing verbs (discover, unlock,
   supercharge, elevate). Banned words: demo, tutorial, onboarding, AI,
   powered by, insights, seamless.
+- No em dashes, en dashes, or double hyphens, anywhere: UI copy, desk
+  captions, and all three agents' prose (prompt rule plus a server-side
+  sanitizer). Plain sentences with periods and commas. The middle dot is
+  the only separator, and only in labels (session 001 · $NVDA).
 - Numbers are always exact figures from the tape — copy never rounds,
   never invents.
 - The hard rule appears in desk deadpan wherever authorship could be
@@ -250,3 +254,21 @@ The doc leaves the desk two ways, and nothing is stored anywhere:
   failing quietly: "the clipboard said no — the link is right here".
 - Nothing marketing-shaped on the share page: no signup wall, no counters.
   One quiet door back to the desk.
+
+## The board, revised (locked 2026-09-04)
+
+Jeffrey's read of the finished board: too many orbs, always moving,
+chaotic. The board is now progressive and still:
+
+- Only the thesis and its lines show at first. A folded line carries its
+  count (· 2 ev, · 1 open). Each line wears its verdict: contested red,
+  supported green, held-against or revised acid, unverified ink.
+- Click a line and its evidence fans out; click the thesis and the open
+  questions do. Clicking another line folds the last one. Evidence keeps
+  its parent open. Arrivals ease in over 460ms; nothing pops.
+- Still until dragged. No auto-rotation. The view and the arrival clock
+  persist across changes, so opening a line never resets where you're
+  looking from.
+- Ambience: the core glow and the drifting debris stay. The grid and the
+  disc under the core are gone.
+- Hint: "drag to rotate · scroll to zoom · click a line to open its evidence".

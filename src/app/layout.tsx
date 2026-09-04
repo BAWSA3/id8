@@ -15,18 +15,18 @@ const silkscreen = Silkscreen({
 });
 
 export const metadata: Metadata = {
-  title: "id8 — a canvas for your thesis",
+  title: "id8 · a canvas for your thesis",
   description:
-    "The thesis desk for narrative traders. Present your play; id8 interrogates it and tests it against live Nansen smart-money flows. It never writes the trade — conviction stays yours.",
+    "The thesis desk for narrative traders. Present your play; id8 interrogates it and tests it against live Nansen smart-money flows. It never writes the trade. Conviction stays yours.",
   openGraph: {
-    title: "id8 — a canvas for your thesis",
+    title: "id8 · a canvas for your thesis",
     description:
       "The thesis desk for narrative traders. Present your play; id8 interrogates it and tests it against live smart-money flows.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "id8 — a canvas for your thesis",
+    title: "id8 · a canvas for your thesis",
     description:
       "The thesis desk for narrative traders. Present your play; id8 interrogates it and tests it against live smart-money flows.",
   },
