@@ -202,8 +202,14 @@ export class AnalystRefusal extends Error {
 const USD_KEY = /flow|volume|liq|cap|usd|value|pnl|buy|sell|inflow|outflow/i;
 /* the metric noun is what the row measures — "smart trader 7d netflow" is USD, "smart trader wallets" is a count */
 const COUNT_KEY = /(wallets?|traders?|holders?|buyers?|sellers?|count|addresses|txs?|pools?|days?|age|score|rank)\s*(\(.*\))?\s*$/i;
+const PCT_KEY = /pct|percent|price change|change %|%/i;
 export function usdRow(k: string, v: string): string {
   const t = v.trim();
+  /* percentages: a bare decimal under a pct key reads as a percent to two places */
+  if (PCT_KEY.test(k) && /^[+-]?\d+(?:\.\d+)?$/.test(t)) {
+    const n = Number(t);
+    return `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
+  }
   const m = /^([+-])?\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?$/.exec(t);
   if (!m) return t;
   if (!USD_KEY.test(k) || COUNT_KEY.test(k)) return t;

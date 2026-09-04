@@ -207,7 +207,7 @@ export class LiveNansenAdapter implements NansenAdapter {
       chain: str(r.chain),
       address: str(r.token_address),
       priceUsd: num(r.price_usd),
-      priceChangePct: num(r.price_change),
+      priceChangePct: Math.round(num(r.price_change) * 10000) / 100, // Nansen returns a fraction (0.0189); the tape reads 1.89
       marketCapUsd: usd(r.market_cap_usd),
       liquidityUsd: usd(r.liquidity),
       volumeUsd7d: usd(r.volume),
