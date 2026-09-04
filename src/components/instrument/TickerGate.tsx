@@ -22,7 +22,8 @@ interface Pool {
 }
 
 interface Resolved {
-  symbol: string;
+  symbol: string; // what the tape calls it (WHYPE)
+  typed: string; // what the trader called it (HYPE), the name the session keeps
   chain: string;
   marketCapUsd: number;
   pools: Pool[];
@@ -55,7 +56,7 @@ export default function TickerGate({
   /* the acknowledgment is the moment — hold it a beat, then proceed */
   useEffect(() => {
     if (status !== "found" || !resolved) return;
-    const t = setTimeout(() => onDone(resolved.symbol), resolved.pools.length ? ADVANCE_WITH_POOL_MS : ADVANCE_MS);
+    const t = setTimeout(() => onDone(resolved.typed), resolved.pools.length ? ADVANCE_WITH_POOL_MS : ADVANCE_MS);
     return () => clearTimeout(t);
   }, [status, resolved, onDone]);
 
@@ -75,6 +76,7 @@ export default function TickerGate({
       if (data.found) {
         setResolved({
           symbol: data.symbol,
+          typed: symbol,
           chain: data.chain,
           marketCapUsd: data.marketCapUsd,
           pools: Array.isArray(data.pools) ? data.pools : [],
@@ -96,7 +98,9 @@ export default function TickerGate({
       <span className="text-muted">checking the tape…</span>
     ) : status === "found" && resolved ? (
       <span className="text-muted">
-        found · {resolved.chain} · mcap ${Math.round(resolved.marketCapUsd).toLocaleString("en-US")} ·{" "}
+        found · {resolved.chain}
+        {resolved.symbol.toUpperCase() !== resolved.typed.toUpperCase() && ` · as ${resolved.symbol}`} · mcap $
+        {Math.round(resolved.marketCapUsd).toLocaleString("en-US")} ·{" "}
         <span className="text-lock">
           <span className="seed mr-1 inline-block align-[1px]" style={{ width: 5, height: 5 }} />
           live
