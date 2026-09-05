@@ -43,6 +43,32 @@ interface RawPair {
 const cache = new Map<string, { at: number; ctx: PairContext }>();
 const TTL_MS = 60_000;
 
+/* chain-native coins, priced from their deepest wrapped pool */
+const NATIVE_WRAPPED: Record<string, { chain: string; address: string }> = {
+  ETH: { chain: "ethereum", address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" }, // WETH
+  BTC: { chain: "ethereum", address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C44" }, // WBTC
+  SOL: { chain: "solana", address: "So11111111111111111111111111111111111111112" }, // wSOL
+  BNB: { chain: "bsc", address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" }, // WBNB
+  AVAX: { chain: "avalanche", address: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7" }, // WAVAX
+  HYPE: { chain: "hyperevm", address: "0x5555555555555555555555555555555555555555" }, // WHYPE
+};
+
+export async function nativePrice(symbol: string): Promise<{ priceUsd: number; via: string } | null> {
+  const w = NATIVE_WRAPPED[symbol.toUpperCase()];
+  if (!w) return null;
+  try {
+    const res = await fetch(`${BASE}/token-pairs/v1/${w.chain}/${w.address}`, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return null;
+    const raw = (await res.json()) as (RawPair & { priceUsd?: string })[];
+    const best = raw.filter((p) => (p.liquidity?.usd ?? 0) > 0).sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];
+    const price = best ? Number(best.priceUsd) : NaN;
+    if (!Number.isFinite(price) || price <= 0) return null;
+    return { priceUsd: price, via: `${best.baseToken?.symbol ?? symbol}/${best.quoteToken?.symbol ?? ""} ${best.dexId ?? ""}`.trim() };
+  } catch {
+    return null;
+  }
+}
+
 export async function pairContext(chain: string, tokenAddress: string, top = 3): Promise<PairContext> {
   const chainId = CHAIN_IDS[chain] ?? chain;
   const key = `${chainId}:${tokenAddress.toLowerCase()}`;

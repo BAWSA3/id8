@@ -9,6 +9,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { currentUser, listPlays, savePlay, signOut, updatePlayPins, type Play, type PlaySession } from "@/lib/desk";
 import type { Pin } from "@/lib/pins";
+import type { WatchRead } from "@/lib/watch";
+import TokenPanel from "./TokenPanel";
+import WatchPanel from "./WatchPanel";
 import Wall from "./Wall";
 import { supabaseConfigured } from "@/lib/supabase/client";
 import { listLocalPlays, removeLocalPlay, updateLocalPlay } from "@/lib/book";
@@ -20,6 +23,17 @@ import DeskAsk from "./DeskAsk";
 import Orb from "./Orb";
 
 type State = "loading" | "ask" | "room";
+
+/* a narrative play's sector: the first sector the analyst quoted */
+function sectorFromCards(p: Play): string | null {
+  for (const c of p.session.challenge?.cards ?? []) {
+    const m = /sector "([^"]+)"/i.exec(c.source);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+const STATUS_CLS: Record<string, string> = { holding: "text-good", breached: "text-bad", unwatched: "text-faint" };
 
 /* plays booked in this browser before sign-in join the desk on arrival */
 async function adoptLocalPlay(): Promise<void> {
@@ -85,6 +99,34 @@ export default function Desk() {
   }, [load]);
 
   const play = plays.find((p) => p.id === selected) ?? null;
+
+  /* the watch: read the tape for the play on screen, once per open */
+  const [reading, setReading] = useState<Record<string, "reading" | "done" | "error">>({});
+  useEffect(() => {
+    if (!play || reading[play.id]) return;
+    const id = play.id;
+    const sector = play.sector ?? sectorFromCards(play);
+    const body = { playId: id, ticker: play.ticker, sector, invalidation: play.session.structure.invalidation.slice(0, 400) };
+    const t = setTimeout(() => {
+      setReading((r) => ({ ...r, [id]: "reading" }));
+      void fetch("/api/watch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok || !data.read) throw new Error();
+          const read = data.read as WatchRead;
+          setPlays((cur) => cur.map((p) => (p.id === id ? { ...p, watches: [read, ...(p.watches ?? [])].slice(0, 30) } : p)));
+          if (local) {
+            const cur = listLocalPlays().find((p) => p.id === id);
+            updateLocalPlay(id, { watches: [read, ...(cur?.watches ?? [])].slice(0, 30) });
+          }
+          setReading((r) => ({ ...r, [id]: "done" }));
+        })
+        .catch(() => setReading((r) => ({ ...r, [id]: "error" })));
+    }, 0);
+    return () => clearTimeout(t);
+    // one read per play per open; the reading map is the guard
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [play?.id]);
   const doc = useMemo(
     () => (play ? buildDoc(play.session.ticker, play.session.extraction, play.session.challenge, play.session.structure) : null),
     [play]
@@ -208,7 +250,12 @@ export default function Desk() {
                     </p>
                     <p className="m-0 mt-1 font-mono text-[9.5px] uppercase tracking-[.12em] text-muted">{ledgerLine(d).split(" · ").slice(1, 4).join(" · ")}</p>
                     <p className="m-0 mt-1 font-mono text-[9.5px] uppercase tracking-[.12em] text-faint">
-                      watch · not read yet{(p.pins?.length ?? 0) > 0 && ` · ${String(p.pins!.length).padStart(2, "0")} pinned`}
+                      {p.watches?.[0] ? (
+                        <span className={STATUS_CLS[p.watches[0].status]}>{p.watches[0].status}</span>
+                      ) : (
+                        "watch · not read yet"
+                      )}
+                      {(p.pins?.length ?? 0) > 0 && ` · ${String(p.pins!.length).padStart(2, "0")} pinned`}
                     </p>
                   </button>
                 );
@@ -241,20 +288,8 @@ export default function Desk() {
 
         {/* the token + the watch */}
         <div className="flex flex-col gap-6">
-          <Panel label="the token" labelRight={play?.chain ?? ""} className="!static">
-            {play ? (
-              <>
-                <p className="m-0 font-mono text-[15px] text-ink">{play.ticker ? `$${play.ticker}` : "a narrative, not a name"}</p>
-                <p className="m-0 mt-2 font-mono text-[9.5px] uppercase tracking-[.12em] text-faint">the tape · reads when the desk opens</p>
-              </>
-            ) : (
-              <p className="m-0 font-mono text-[11px] text-faint">no vehicle on the book.</p>
-            )}
-          </Panel>
-          <Panel label="the watch" className="!static">
-            <p className="m-0 font-mono text-[9.5px] uppercase tracking-[.12em] text-faint">not read yet</p>
-            {doc?.invalidation && <p className="m-0 mt-2 text-[13px] leading-relaxed text-muted">{doc.invalidation}</p>}
-          </Panel>
+          <TokenPanel play={play} read={play?.watches?.[0] ?? null} state={play ? reading[play.id] : undefined} />
+          <WatchPanel play={play} read={play?.watches?.[0] ?? null} state={play ? reading[play.id] : undefined} />
         </div>
       </div>
 

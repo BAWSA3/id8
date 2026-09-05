@@ -5,6 +5,7 @@
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { sessionSlug, type Challenge, type Extraction, type QA, type StructureState } from "@/lib/session";
 import type { Pin } from "@/lib/pins";
+import type { WatchRead } from "@/lib/watch";
 
 export interface PlaySession {
   thesis: string;
@@ -23,6 +24,8 @@ export interface Play {
   slug: string;
   session: PlaySession;
   pins?: Pin[];
+  /* the watch, newest first (kept short) */
+  watches?: WatchRead[];
   booked_at: string;
 }
 
