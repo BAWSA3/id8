@@ -25,7 +25,7 @@ interface Resolved {
   symbol: string; // what the tape calls it (WHYPE)
   typed: string; // what the trader called it (HYPE), the name the session keeps
   chain: string;
-  marketCapUsd: number;
+  marketCapUsd: number | null;
   pools: Pool[];
   poolCount: number;
 }
@@ -99,8 +99,8 @@ export default function TickerGate({
     ) : status === "found" && resolved ? (
       <span className="text-muted">
         found · {resolved.chain}
-        {resolved.symbol.toUpperCase() !== resolved.typed.toUpperCase() && ` · as ${resolved.symbol}`} · mcap $
-        {Math.round(resolved.marketCapUsd).toLocaleString("en-US")} ·{" "}
+        {resolved.symbol.toUpperCase() !== resolved.typed.toUpperCase() && ` · as ${resolved.symbol}`}
+        {resolved.marketCapUsd !== null && ` · mcap $${Math.round(resolved.marketCapUsd).toLocaleString("en-US")}`} ·{" "}
         <span className="text-lock">
           <span className="seed mr-1 inline-block align-[1px]" style={{ width: 5, height: 5 }} />
           live

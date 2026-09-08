@@ -42,8 +42,8 @@ export default function TokenPanel({ play, read, state }: { play: Play | null; r
       {t && (
         <div>
           <Row k="price" v={price(t.priceUsd)} />
-          <Row k="7d" v={`${t.priceChangePct > 0 ? "+" : ""}${t.priceChangePct.toFixed(2)}%`} dir={sign(t.priceChangePct)} />
-          <Row k="mcap" v={usd(t.marketCapUsd)} />
+          {t.priceChangePct !== null && <Row k="7d" v={`${t.priceChangePct > 0 ? "+" : ""}${t.priceChangePct.toFixed(2)}%`} dir={sign(t.priceChangePct)} />}
+          {t.marketCapUsd !== null && <Row k="mcap" v={usd(t.marketCapUsd)} />}
           {t.pool && <Row k={`${t.pool.pair} · ${t.pool.dex}${t.pool.version ? ` ${t.pool.version}`: ""}`} v={`${usd(t.pool.liquidityUsd)} liq`} />}
           {t.pool && <Row k="pool 24h" v={usd(t.pool.volume24hUsd)} />}
           {t.flows && <Row k="smart trader 7d" v={usd(t.flows.smartTraderNetFlowUsd)} dir={sign(t.flows.smartTraderNetFlowUsd)} />}

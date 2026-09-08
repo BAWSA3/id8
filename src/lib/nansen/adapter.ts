@@ -1,4 +1,5 @@
 import "server-only";
+import { nativePrice, pairContext } from "@/lib/dexscreener";
 
 /* NansenAdapter — the seam between id8 and the Nansen API.
    Server-only: the API key must never reach the browser.
@@ -63,12 +64,15 @@ export interface TokenMarket {
   chain: string;
   address: string;
   priceUsd: number;
-  priceChangePct: number;
-  marketCapUsd: number;
+  /* null = not on this feed (a chain-native coin has no screener row) */
+  priceChangePct: number | null;
+  marketCapUsd: number | null;
   liquidityUsd: number;
   volumeUsd7d: number;
-  netflowUsd7d: number;
-  tokenAgeDays: number;
+  netflowUsd7d: number | null;
+  tokenAgeDays: number | null;
+  /* where each figure came from, when it is not the screener; read by the analyst as data */
+  note?: string;
 }
 
 export interface TokenSegmentFlows {
@@ -148,6 +152,90 @@ const NATIVE_ALIASES: Record<string, { symbol: string; chain: string }> = {
   XPL: { symbol: "WXPL", chain: "plasma" },
 };
 
+/* ETH, SOL and BTC have no screener row at all: the symbol search returns
+   copycats (a pump.fun "SOL", the Binance-peg "SOL" on bnb) and the wrapped
+   token is filtered out as native. Verified live 2026-09-08. So the native
+   coin resolves by hand: the market row from CoinGecko (keyless, cached), the
+   holder-segment flows from Nansen on the canonical wrapped token, the pools
+   from Dexscreener on that same address. BTC has no onchain wrapped market
+   worth reading as BTC, so it carries market data only. */
+const NATIVE_COINS: Record<string, { chain: string; address: string; gecko: string; via: string }> = {
+  ETH: { chain: "ethereum", address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", gecko: "ethereum", via: "WETH on ethereum" },
+  SOL: { chain: "solana", address: "So11111111111111111111111111111111111111112", gecko: "solana", via: "wrapped SOL on solana" },
+  BTC: { chain: "bitcoin", address: "", gecko: "bitcoin", via: "no onchain wrapped market read" },
+};
+
+const GECKO = "https://api.coingecko.com/api/v3";
+const geckoCache = new Map<string, { at: number; market: TokenMarket }>();
+/* the market row moves slowly; the keyless tier is tight (a few calls a minute), so hold it */
+const GECKO_TTL_MS = 10 * 60_000;
+const FALLBACK_TTL_MS = 60_000;
+
+function geckoHeaders(): Record<string, string> {
+  const h: Record<string, string> = { accept: "application/json" };
+  /* optional: a CoinGecko demo key lifts the keyless limit (COINGECKO_API_KEY) */
+  if (process.env.COINGECKO_API_KEY) h["x-cg-demo-api-key"] = process.env.COINGECKO_API_KEY;
+  return h;
+}
+
+async function nativeMarket(symbol: string): Promise<TokenMarket | null> {
+  const n = NATIVE_COINS[symbol];
+  if (!n) return null;
+  const hit = geckoCache.get(symbol);
+  if (hit && Date.now() - hit.at < (hit.market.marketCapUsd === null ? FALLBACK_TTL_MS : GECKO_TTL_MS)) return hit.market;
+  const opts = { headers: geckoHeaders(), signal: AbortSignal.timeout(5000), cache: "no-store" as const };
+  const [marketsRes, chartRes, pools] = await Promise.all([
+    fetch(`${GECKO}/coins/markets?vs_currency=usd&ids=${n.gecko}&price_change_percentage=7d`, opts).catch(() => null),
+    fetch(`${GECKO}/coins/${n.gecko}/market_chart?vs_currency=usd&days=7&interval=daily`, opts).catch(() => null),
+    n.address ? pairContext(n.chain, n.address, 1) : Promise.resolve({ pools: [], poolCount: 0 }),
+  ]);
+  const pool = pools.pools[0];
+  const flowsNote = `holder-segment flows from Nansen on ${n.via}. liquidity is the deepest wrapped pool.`;
+
+  let market: TokenMarket | null = null;
+  const row = marketsRes?.ok ? ((await marketsRes.json()) as Raw[])[0] : undefined;
+  if (row && num(row.current_price) > 0) {
+    let volume7d = 0;
+    if (chartRes?.ok) {
+      const chart = (await chartRes.json()) as { total_volumes?: [number, number][] };
+      volume7d = (chart.total_volumes ?? []).slice(-7).reduce((acc, [, v]) => acc + num(v), 0);
+    }
+    market = {
+      symbol,
+      chain: n.chain,
+      address: n.address,
+      priceUsd: num(row.current_price),
+      priceChangePct: typeof row.price_change_percentage_7d_in_currency === "number" ? Math.round(row.price_change_percentage_7d_in_currency * 100) / 100 : null,
+      marketCapUsd: usd(row.market_cap),
+      liquidityUsd: pool?.liquidityUsd ?? 0,
+      volumeUsd7d: Math.round(volume7d) || usd(row.total_volume) * 7,
+      netflowUsd7d: null,
+      tokenAgeDays: null,
+      note: `chain-native coin. market row from CoinGecko (price, 7d change, market cap, volume across venues). ${flowsNote}`,
+    };
+  } else {
+    /* CoinGecko out or rate limited: the wrapped pool still prices the coin.
+       market cap and 7d change stay null rather than the wrapped supply's. */
+    const native = n.address ? await nativePrice(symbol) : null;
+    if (!native) return null;
+    market = {
+      symbol,
+      chain: n.chain,
+      address: n.address,
+      priceUsd: native.priceUsd,
+      priceChangePct: null,
+      marketCapUsd: null,
+      liquidityUsd: pool?.liquidityUsd ?? 0,
+      volumeUsd7d: (pool?.volume24hUsd ?? 0) * 7,
+      netflowUsd7d: null,
+      tokenAgeDays: null,
+      note: `chain-native coin. price from the deepest wrapped pool (${native.via}); market cap and 7d change not on this feed right now. volume is the pool's 24h times seven. ${flowsNote}`,
+    };
+  }
+  geckoCache.set(symbol, { at: Date.now(), market });
+  return market;
+}
+
 export class LiveNansenAdapter implements NansenAdapter {
   readonly isMock = false;
 
@@ -179,6 +267,7 @@ export class LiveNansenAdapter implements NansenAdapter {
   async resolveToken(symbol: string): Promise<TokenMarket | null> {
     /* the screener takes at most 5 chains per call — fan out across every chain
        Nansen indexes, tolerate per-batch failures, take the largest market */
+    if (NATIVE_COINS[symbol]) return nativeMarket(symbol);
     const alias = NATIVE_ALIASES[symbol];
     const batches: string[][] = [];
     if (alias) batches.push([alias.chain]);
@@ -217,6 +306,7 @@ export class LiveNansenAdapter implements NansenAdapter {
   }
 
   async tokenSegmentFlows(token: TokenMarket): Promise<TokenSegmentFlows | null> {
+    if (!token.address) return null;
     const json = (await nansenPost("/tgm/flow-intelligence", {
       chain: token.chain,
       token_address: token.address,

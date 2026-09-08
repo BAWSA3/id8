@@ -16,11 +16,12 @@ export interface TokenRead {
   symbol: string;
   chain: string;
   priceUsd: number;
-  priceChangePct: number;
-  marketCapUsd: number;
+  /* null = not on this feed (chain-native coins carry no screener row) */
+  priceChangePct: number | null;
+  marketCapUsd: number | null;
   liquidityUsd: number;
   volumeUsd7d: number;
-  netflowUsd7d: number;
+  netflowUsd7d: number | null;
   flows: {
     smartTraderNetFlowUsd: number;
     smartTraderWalletCount: number;
