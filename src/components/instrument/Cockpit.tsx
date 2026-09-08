@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { FeedLine, IdeaEdge, IdeaNode } from "@/lib/session";
+import { progressiveBoard, type FeedLine, type IdeaEdge, type IdeaNode } from "@/lib/session";
 import Constellation from "./Constellation";
 import Panel from "@/components/hud/Panel";
 import PhaseMenu from "@/components/hud/PhaseMenu";
@@ -59,31 +59,7 @@ export default function Cockpit({
   const locked = nodes.find((n) => n.id === lockedId);
 
   /* the progressive board: what's on it right now, with counts on the folded lines */
-  const board = useMemo(() => {
-    const parentOf = (id: string) => edges.find((e) => e.from === id)?.to ?? null; // ev → a#/thesis, risk → thesis
-    const childCount = new Map<string, { ev: number; risk: number }>();
-    for (const n of nodes) {
-      if (n.kind !== "evidence" && n.kind !== "risk") continue;
-      const p = parentOf(n.id);
-      if (!p) continue;
-      const c = childCount.get(p) ?? { ev: 0, risk: 0 };
-      if (n.kind === "evidence") c.ev++;
-      else c.risk++;
-      childCount.set(p, c);
-    }
-    const shown = nodes.filter((n) => {
-      if (n.kind === "core" || n.kind === "assumption") return true;
-      return openId !== null && parentOf(n.id) === openId;
-    });
-    const withCounts = shown.map((n) => {
-      const c = childCount.get(n.id);
-      if (!c || n.id === openId) return n;
-      const parts = [c.ev ? `${c.ev} ev` : "", c.risk ? `${c.risk} open` : ""].filter(Boolean);
-      return parts.length ? { ...n, sub: `${n.sub} · ${parts.join(" · ")}` } : n;
-    });
-    const ids = new Set(withCounts.map((n) => n.id));
-    return { nodes: withCounts, edges: edges.filter((e) => ids.has(e.from) && ids.has(e.to)) };
-  }, [nodes, edges, openId]);
+  const board = useMemo(() => progressiveBoard(nodes, edges, openId), [nodes, edges, openId]);
 
   /* assembly timer — each panel earns a beat */
   useEffect(() => {

@@ -19,6 +19,7 @@ import { buildDoc, encodeDoc, ledgerLine } from "@/lib/doc";
 import { SESSION_STORE_KEY } from "@/lib/session";
 import Panel from "@/components/hud/Panel";
 import DocView from "./DocView";
+import PlayBoard from "./PlayBoard";
 import DeskAsk from "./DeskAsk";
 import Orb from "./Orb";
 
@@ -68,6 +69,8 @@ export default function Desk() {
   const [plays, setPlays] = useState<Play[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  /* the breakdown reads the play; the board shows it as it settled at the ruling */
+  const [view, setView] = useState<"breakdown" | "board">("breakdown");
   /* browser-only: no store wired, the local book is the desk */
   const [local, setLocal] = useState(false);
   const router = useRouter();
@@ -273,11 +276,17 @@ export default function Desk() {
                   <span className="seed mr-2.5 align-[1px]" />
                   {play.ticker ? `$${play.ticker}` : play.slug} · on the book
                 </p>
-                <button onClick={() => void copyLink()} className="ml-auto border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-colors hover:text-ink">
+                <button
+                  onClick={() => setView((v) => (v === "board" ? "breakdown" : "board"))}
+                  className={`ml-auto border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] transition-colors ${view === "board" ? "text-lock-deep hover:text-lock" : "text-faint hover:text-ink"}`}
+                >
+                  {view === "board" ? "[ the breakdown ]" : "[ open the board ]"}
+                </button>
+                <button onClick={() => void copyLink()} className="border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-colors hover:text-ink">
                   {copied ? "[ copied ]" : "[ copy a link ]"}
                 </button>
               </div>
-              <DocView doc={doc} />
+              {view === "board" ? <PlayBoard key={play.id} session={play.session} /> : <DocView doc={doc} />}
             </>
           ) : (
             <p className="m-0 font-mono text-[12.5px] text-muted">

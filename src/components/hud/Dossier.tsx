@@ -9,9 +9,16 @@ const TONE: Record<TagTone, string> = {
 };
 
 /* Target-locked node detail panel. */
-export default function Dossier({ data }: { data: DossierData }) {
+export default function Dossier({
+  data,
+  className = "right-10 top-8 w-[296px] max-h-[66%] overflow-y-auto",
+}: {
+  data: DossierData;
+  /* where the panel sits; the cockpit floats it top right, the desk sets it under the board */
+  className?: string;
+}) {
   return (
-    <Panel label="target lock" className="right-10 top-8 w-[296px] max-h-[66%] overflow-y-auto">
+    <Panel label="target lock" className={className}>
       <h3 className="m-0 mb-1 font-mono text-xs uppercase tracking-[.14em]">{data.title}</h3>
       <p className="m-0 mb-3 font-mono text-[10px] uppercase tracking-[.1em] text-muted">{data.sub}</p>
       <span className={`mb-2.5 inline-block border border-current px-[7px] py-[2px] font-mono text-[9px] uppercase tracking-[.14em] ${TONE[data.tag.tone]}`}>

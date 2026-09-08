@@ -305,3 +305,39 @@ export function nodesFromExtraction(
 
   return { nodes, edges };
 }
+
+/* ---------- the progressive board ---------- */
+
+/* What's on the board right now: the thesis and its lines always; a line's
+   evidence (or the thesis's open questions) only while that line is open.
+   Folded lines carry counts of what they hold. Shared by the cockpit and the
+   desk so a play reopens exactly as it was built. */
+export function progressiveBoard(
+  nodes: IdeaNode[],
+  edges: IdeaEdge[],
+  openId: string | null
+): { nodes: IdeaNode[]; edges: IdeaEdge[] } {
+  const parentOf = (id: string) => edges.find((e) => e.from === id)?.to ?? null; // ev → a#/thesis, risk → thesis
+  const childCount = new Map<string, { ev: number; risk: number }>();
+  for (const n of nodes) {
+    if (n.kind !== "evidence" && n.kind !== "risk") continue;
+    const p = parentOf(n.id);
+    if (!p) continue;
+    const c = childCount.get(p) ?? { ev: 0, risk: 0 };
+    if (n.kind === "evidence") c.ev++;
+    else c.risk++;
+    childCount.set(p, c);
+  }
+  const shown = nodes.filter((n) => {
+    if (n.kind === "core" || n.kind === "assumption") return true;
+    return openId !== null && parentOf(n.id) === openId;
+  });
+  const withCounts = shown.map((n) => {
+    const c = childCount.get(n.id);
+    if (!c || n.id === openId) return n;
+    const parts = [c.ev ? `${c.ev} ev` : "", c.risk ? `${c.risk} open` : ""].filter(Boolean);
+    return parts.length ? { ...n, sub: `${n.sub} · ${parts.join(" · ")}` } : n;
+  });
+  const ids = new Set(withCounts.map((n) => n.id));
+  return { nodes: withCounts, edges: edges.filter((e) => ids.has(e.from) && ids.has(e.to)) };
+}
