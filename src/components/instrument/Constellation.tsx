@@ -6,6 +6,7 @@
 
 import { useEffect, useRef } from "react";
 import type { IdeaEdge, IdeaNode } from "@/lib/session";
+import { useStage } from "@/lib/stage";
 
 interface Palette {
   ink: string; muted: string; faint: string; lock: string;
@@ -32,6 +33,12 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
      line changes what's on the board, not where you're looking from */
   const viewRef = useRef({ yaw: 0.6, pitch: -0.28, zoom: initialZoom });
   const bornRef = useRef(new Map<string, number>());
+  /* the stage may ask where the nodes sit on screen (the film's cursor reads it) */
+  const stage = useStage();
+  const stageRef = useRef(stage);
+  useEffect(() => {
+    stageRef.current = stage;
+  }, [stage]);
 
   useEffect(() => {
     lockedRef.current = lockedId;
@@ -116,6 +123,12 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
 
       const P: Record<string, ReturnType<typeof project>> = {};
       for (const n of nodes) P[n.id] = project(n.pos);
+      const report = stageRef.current.boardScreen;
+      if (report && canvas) {
+        const cr = canvas.getBoundingClientRect();
+        report.current.clear();
+        for (const n of nodes) report.current.set(n.id, { x: cr.left + P[n.id].x, y: cr.top + P[n.id].y });
+      }
       const core = nodes.find((n) => n.kind === "core");
       const c = core ? P[core.id] : { x: W / 2, y: H / 2, s: 1, z: 0 };
 
@@ -243,7 +256,11 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
     const onDown = (e: PointerEvent) => {
       dragging = true; moved = 0; lx = e.clientX; ly = e.clientY;
       canvas.classList.add("dragging");
-      canvas.setPointerCapture(e.pointerId);
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {
+        /* a synthetic or already-released pointer has nothing to capture */
+      }
     };
     const onMove = (e: PointerEvent) => {
       const r = canvas.getBoundingClientRect();

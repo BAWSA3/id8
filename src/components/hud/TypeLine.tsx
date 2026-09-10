@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useStage } from "@/lib/stage";
 
 /* Typewriter for a single line. To retype on a new message, key the
    component by its text: <TypeLine key={text} text={text} />. */
@@ -14,12 +15,13 @@ export default function TypeLine({
   text: string;
 }) {
   const [chars, setChars] = useState(0);
+  const { typeSpeed } = useStage();
 
   /* Elapsed-time based (not per-tick increments) so browser timer throttling
      in background tabs can't stall the line — on return it's simply caught up. */
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const msPerChar = 22;
+    const msPerChar = 22 / typeSpeed;
     const start = performance.now();
     let raf = 0;
     const tick = (now: number) => {
@@ -36,7 +38,7 @@ export default function TypeLine({
       cancelAnimationFrame(raf);
       clearInterval(fallback);
     };
-  }, [text]);
+  }, [text, typeSpeed]);
 
   return (
     <p className="m-0 min-h-[42px] font-mono text-[12.5px] leading-relaxed" aria-live="polite">

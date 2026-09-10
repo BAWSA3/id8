@@ -1,0 +1,9 @@
+import { notFound } from "next/navigation";
+import Film from "@/components/film/Film";
+
+/* the film booth lives on the dev desk only */
+export default async function FilmPage({ searchParams }: { searchParams: Promise<{ auto?: string }> }) {
+  if (process.env.NODE_ENV === "production" && !process.env.ID8_FILM) notFound();
+  const { auto } = await searchParams;
+  return <Film auto={auto === "1"} />;
+}

@@ -1,0 +1,207 @@
+{
+  "capturedAt": "2026-09-10T22:55:50.703Z",
+  "thesis": "SOL runs into the Breakpoint window over the next two weeks. ETF filings and treasury companies keep buying, and smart money on chain has been accumulating since the last dip. Invalidation: if SOL loses 180 on a daily close or smart money netflow turns negative for a week, I am out.",
+  "ticker": "SOL",
+  "tickerCheck": {
+    "found": true,
+    "symbol": "SOL",
+    "chain": "solana",
+    "marketCapUsd": 58340735097,
+    "live": true,
+    "pools": [
+      {
+        "dex": "raydium",
+        "version": null,
+        "base": "SOL",
+        "quote": "USDC",
+        "liquidityUsd": 25739593,
+        "volume24hUsd": 63209566,
+        "pairAddress": "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2",
+        "url": "https://dexscreener.com/solana/58oqchx4ywmvkdwllzzbi4chocc2fqcuwbkwmihlyqo2"
+      }
+    ],
+    "poolCount": 30
+  },
+  "qa": [
+    {
+      "q": "If the Breakpoint bid is real, why hold SOL itself rather than the ecosystem names that usually beta up harder into that window?",
+      "a": "Liquidity. I can size SOL on a perp with tight spreads and get out in one click. Ecosystem beta has thinner books and I have been trapped in them before."
+    },
+    {
+      "q": "Breakpoint run-ups are a well known pattern. What tells you this one is still forming rather than already priced in by everyone waiting for it?",
+      "a": "Funding is flat and open interest has not expanded yet, so the crowd is not leaning long. If it were priced I would expect funding to be elevated and OI near the highs."
+    },
+    {
+      "q": "You said two weeks. Do you exit into Breakpoint itself or hold through the event, and what would make you take profit early?",
+      "a": "I sell into the headlines. Breakpoint is the event, not the catalyst. The daily close above 180 has to hold on every day of the window or I am out early."
+    },
+    {
+      "q": "What counts as smart money netflow turning negative, whose wallets and whose dashboard, and would you actually act on it if price held above 180?",
+      "a": "Nansen smart money netflow on SOL, seven day window. Threshold is a negative seven day netflow of more than ten million dollars. Yes I trust it over price, flows lead in my experience."
+    }
+  ],
+  "extraction": {
+    "claim": "SOL runs into the Breakpoint window over the next two weeks, held as a perp for liquidity, and sold into the headlines because Breakpoint is the event, not the catalyst.",
+    "audience": "ETF filings and treasury companies keep buying, and smart money on chain has been accumulating since the last dip.",
+    "assumptions": [
+      {
+        "text": "The Breakpoint run-up is still forming rather than already priced in, because the crowd is not leaning long yet.",
+        "basis": "Funding is flat and open interest has not expanded yet"
+      },
+      {
+        "text": "ETF filings and treasury company buying continue through the two week window.",
+        "basis": "ETF filings and treasury companies keep buying"
+      },
+      {
+        "text": "SOL perp liquidity stays tight enough to size in and exit in one click.",
+        "basis": "I can size SOL on a perp with tight spreads and get out in one click"
+      },
+      {
+        "text": "Nansen smart money netflow is a reliable read and leads price.",
+        "basis": "Yes I trust it over price, flows lead in my experience"
+      },
+      {
+        "text": "There will be Breakpoint headlines to sell into inside the two week window.",
+        "basis": "I sell into the headlines"
+      }
+    ],
+    "openQuestions": [
+      "Does flat funding and unexpanded open interest confirm the crowd is not leaning long, or can positioning build without those signals moving?",
+      "Is smart money accumulation since the last dip observable on the Nansen seven day netflow the trader is using?",
+      "Does ETF filing and treasury company buying show up as continued demand inside the next two weeks?"
+    ],
+    "invalidation": "Out if SOL loses 180 on a daily close, the close above 180 must hold on every day of the window, or if Nansen smart money seven day netflow on SOL turns negative by more than ten million dollars."
+  },
+  "tape": [
+    {
+      "stage": "planned",
+      "sectors": [
+        "L1/L2 Token & Derivatives",
+        "Perps, Options and Derivatives"
+      ],
+      "symbols": [
+        "SOL"
+      ]
+    },
+    {
+      "stage": "gathered",
+      "count": 7,
+      "labels": [
+        "nansen smart money · top accumulation, all sectors · 7d/30d",
+        "nansen smart money · top distribution, all sectors · 7d/30d",
+        "nansen smart money · sector \"L1/L2 Token & Derivatives\" · accumulation · 7d/30d",
+        "nansen smart money · sector \"L1/L2 Token & Derivatives\" · distribution · 7d/30d",
+        "nansen smart money · sector \"Perps, Options and Derivatives\" · accumulation · 7d/30d",
+        "nansen smart money · sector \"Perps, Options and Derivatives\" · distribution · 7d/30d",
+        "token intelligence · SOL · chain-native coin · market row from coingecko + nansen flows by holder segment on solana"
+      ],
+      "fixture": false
+    },
+    {
+      "stage": "reading"
+    }
+  ],
+  "challenge": {
+    "fixture": false,
+    "analystLine": "SOL prints 99.46, down 4.9 percent. Smart traders are net minus $139,701 over 7d, top PnL wallets minus $7,380,954, exchange netflow plus $43,292,963. Whales alone are net positive at $203,135.",
+    "skepticLine": "Your invalidation says the close above 180 must hold every day, yet this feed shows SOL at 99.46 with smart money and top PnL wallets already net sellers. What is left of the accumulation premise you are trading?",
+    "cards": [
+      {
+        "assumptionIndex": 4,
+        "title": "SOL smart money is not accumulating",
+        "source": "token intelligence · SOL · nansen flows by holder segment on solana · 7d",
+        "rows": [
+          {
+            "k": "Smart trader netflow 7d",
+            "v": "-$139,701",
+            "dir": "neg"
+          },
+          {
+            "k": "Smart trader wallets",
+            "v": "384",
+            "dir": "neutral"
+          },
+          {
+            "k": "Top PnL netflow 7d",
+            "v": "-$7,380,954",
+            "dir": "neg"
+          },
+          {
+            "k": "Public figure netflow 7d",
+            "v": "-$286,325",
+            "dir": "neg"
+          }
+        ],
+        "verdict": "contradicts",
+        "note": "On the seven day window the smart trader cohort is a net seller and the top PnL cohort is out by millions, with heavy net flow into exchanges. Only the 44 whale wallets are net positive, and by a small amount."
+      },
+      {
+        "assumptionIndex": 0,
+        "title": "Price level versus the stated invalidation",
+        "source": "token intelligence · SOL · market row from coingecko",
+        "rows": [
+          {
+            "k": "SOL price",
+            "v": "99.46",
+            "dir": "neg"
+          },
+          {
+            "k": "Price change",
+            "v": "-4.90%",
+            "dir": "neg"
+          },
+          {
+            "k": "Market cap",
+            "v": "$58,340,735,097",
+            "dir": "neutral"
+          }
+        ],
+        "verdict": "contradicts",
+        "note": "The invalidation requires a close above 180 on every day of the window, and this feed prints SOL at 99.46, down 4.9 percent. The level named as the exit sits far above the current market row."
+      },
+      {
+        "assumptionIndex": 3,
+        "title": "No perp depth on this feed",
+        "source": "token intelligence · SOL · market row + nansen perps sector · 7d/30d",
+        "rows": [
+          {
+            "k": "Deepest wrapped pool liquidity",
+            "v": "$25,739,593",
+            "dir": "neutral"
+          },
+          {
+            "k": "Volume 7d across venues",
+            "v": "$21,855,303,189",
+            "dir": "neutral"
+          },
+          {
+            "k": "Largest perps sector 7d inflow (PERCOLAT",
+            "v": "$20,434",
+            "dir": "neutral"
+          }
+        ],
+        "verdict": "inconclusive",
+        "note": "The feed carries spot volume and one wrapped pool figure, plus flows in perp platform tokens, none of which measure SOL perp book depth or slippage. The seven day SOL netflow field is not carried on this feed at all."
+      },
+      {
+        "assumptionIndex": 2,
+        "title": "No ETF or treasury data on feed",
+        "source": "nansen smart money datasets · 7d/30d",
+        "rows": [
+          {
+            "k": "SOL rows in L1/L2 accumulation",
+            "v": "0",
+            "dir": "neutral"
+          },
+          {
+            "k": "WETH netflow 7d (L1/L2 sector)",
+            "v": "-$612,291",
+            "dir": "neg"
+          }
+        ],
+        "verdict": "inconclusive",
+        "note": "Nothing in this feed tracks ETF filings or treasury company purchases. The nearest proxy, the L1/L2 sector, lists only WAVAX, ARB and WETH, with SOL absent from both the accumulation and distribution tables."
+      }
+    ]
+  }
+}

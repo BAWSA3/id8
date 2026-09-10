@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FeedLine } from "@/lib/session";
 import Panel from "./Panel";
+import { useStage } from "@/lib/stage";
 
 const AGENT_COLOR: Record<FeedLine["agent"], string> = {
   clarifier: "text-lock",
@@ -47,6 +48,7 @@ export default function AgentFeed({
 }) {
   const [li, setLi] = useState(0);
   const [chars, setChars] = useState(0);
+  const { typeSpeed } = useStage();
   const key = lines.map((l) => l.agent + l.text).join("|");
   /* the transcript scrolls inside the panel — the feed never grows into the phases above it */
   const scroller = useRef<HTMLDivElement>(null);
@@ -74,7 +76,7 @@ export default function AgentFeed({
       const t = setTimeout(() => { setLi(li + 1); setChars(0); }, 900);
       return () => { clearTimeout(show); clearTimeout(t); };
     }
-    const CPS = 42, HOLD_MS = 700;
+    const CPS = 42 * typeSpeed, HOLD_MS = 700 / typeSpeed;
     const start = performance.now();
     let raf = 0;
     let advanced = false;
@@ -93,7 +95,7 @@ export default function AgentFeed({
     raf = requestAnimationFrame(loop);
     const iv = setInterval(tick, 300); // rAF pauses entirely in background tabs
     return () => { cancelAnimationFrame(raf); clearInterval(iv); };
-  }, [li, lines]);
+  }, [li, lines, typeSpeed]);
 
   return (
     <Panel label="the feed" className="bottom-[92px] left-10 top-[296px] flex w-[min(440px,calc(100%-80px))] flex-col">
