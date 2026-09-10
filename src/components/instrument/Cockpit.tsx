@@ -32,6 +32,7 @@ export default function Cockpit({
   edges,
   activePhase,
   feed,
+  wait,
   challengeError = false,
   onRetryChallenge,
   onRule,
@@ -42,6 +43,8 @@ export default function Cockpit({
   edges: IdeaEdge[];
   activePhase: number;
   feed: FeedLine[];
+  /* the desk's waiting line while the tape runs */
+  wait?: { text: string; startedAt: number };
   challengeError?: boolean;
   onRetryChallenge?: () => void;
   /* the tape is in — the trader can go rule on it */
@@ -128,6 +131,7 @@ export default function Cockpit({
       <div className={reveal(build >= 4)}>
         <AgentFeed
           lines={feed}
+          wait={wait}
           extra={
             challengeError && onRetryChallenge ? (
               <button

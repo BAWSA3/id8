@@ -7,7 +7,14 @@ import { MAX_THESIS_CHARS } from "@/lib/session";
 
 /* Same security posture as /api/clarify: zod-validated + capped inputs,
    untrusted-wrapping in the agent layer, bounded structured output,
-   per-IP + global daily rate limits. Anonymous by design (no auth/DB yet). */
+   per-IP + global daily rate limits. Anonymous by design (no auth/DB yet).
+
+   The tape streams: the success path is newline-delimited JSON, one progress
+   event per stage (planned, gathered, reading) and then { stage: "done" } with
+   the challenge, or { stage: "error" } with the same messages the plain JSON
+   branch used to send. Rate limit and validation failures stay plain JSON. */
+
+export const maxDuration = 120;
 
 const BodySchema = z.object({
   thesis: z.string().min(10).max(MAX_THESIS_CHARS),
@@ -46,27 +53,37 @@ export async function POST(req: Request) {
     );
   }
 
-  try {
-    const extraction = { ...body.extraction, invalidation: body.extraction.invalidation ?? "unstated" };
-    const challenge = await runChallenge(body.thesis, extraction, body.ticker);
-    return NextResponse.json({ challenge });
-  } catch (err) {
-    if (err instanceof AnalystRefusal) {
-      return NextResponse.json(
-        { error: "refused", message: "The analyst declined to engage with this idea." },
-        { status: 200 }
-      );
-    }
-    if (err instanceof Anthropic.RateLimitError || err instanceof Anthropic.InternalServerError) {
-      return NextResponse.json(
-        { error: "upstream_busy", message: "The analyst is overloaded. Try again shortly." },
-        { status: 503 }
-      );
-    }
-    console.error("challenge route error:", err);
-    return NextResponse.json(
-      { error: "analyst_error", message: "The analyst hit a snag. Try again." },
-      { status: 500 }
-    );
+  const extraction = { ...body.extraction, invalidation: body.extraction.invalidation ?? "unstated" };
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (e: unknown) => controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"));
+      try {
+        const challenge = await runChallenge(body.thesis, extraction, body.ticker, send);
+        send({ stage: "done", challenge });
+      } catch (err) {
+        send({ stage: "error", ...failure(err) });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Accel-Buffering": "no",
+    },
+  });
+}
+
+function failure(err: unknown): { error: string; message: string } {
+  if (err instanceof AnalystRefusal) {
+    return { error: "refused", message: "The analyst declined to engage with this idea." };
   }
+  if (err instanceof Anthropic.RateLimitError || err instanceof Anthropic.InternalServerError) {
+    return { error: "upstream_busy", message: "The analyst is overloaded. Try again shortly." };
+  }
+  console.error("challenge route error:", err);
+  return { error: "analyst_error", message: "The analyst hit a snag. Try again." };
 }

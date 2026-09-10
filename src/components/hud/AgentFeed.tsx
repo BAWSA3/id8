@@ -11,14 +11,39 @@ const AGENT_COLOR: Record<FeedLine["agent"], string> = {
   system: "text-muted",
 };
 
+/* While the tape works, the desk admits it under the transcript: what stage
+   it is on and how long it has been. Fades in after a beat, like the clarifier's
+   thinking line. Clock driven by an interval, since rAF pauses in background tabs. */
+function DeskWait({ text, startedAt }: { text: string; startedAt: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const iv = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(iv);
+  }, []);
+  const s = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const clock = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  return (
+    <p
+      className={`m-0 mt-2.5 shrink-0 font-mono text-[9px] uppercase tracking-[.16em] text-faint transition-opacity duration-500 ${s >= 4 ? "opacity-100" : "opacity-0"}`}
+      aria-live="polite"
+    >
+      <span className="font-pixel">the desk ·</span> {text}
+      {s >= 45 ? " still on it." : ""} <span className="tabular-nums text-muted">{clock}</span>
+    </p>
+  );
+}
+
 /* The feed — a transcript. Each line types once, in order, and stays on the
-   board; nothing loops. New lines (the tape landing) append and type in. */
+   board; nothing loops. New lines (the tape landing) append and type in.
+   `wait` lives outside `lines` on purpose: progress never restarts the transcript. */
 export default function AgentFeed({
   lines,
   extra,
+  wait,
 }: {
   lines: FeedLine[];
   extra?: React.ReactNode;
+  wait?: { text: string; startedAt: number };
 }) {
   const [li, setLi] = useState(0);
   const [chars, setChars] = useState(0);
@@ -85,6 +110,7 @@ export default function AgentFeed({
           </p>
         ))}
       </div>
+      {wait && <DeskWait text={wait.text} startedAt={wait.startedAt} />}
       <p className="m-0 mt-3 shrink-0 border-t border-line pt-2.5 font-mono text-[10px] uppercase tracking-[.16em] text-muted">
         what the tape found · what the skeptic doubts. <b className="font-normal text-lock">id8 will not write this for you.</b>
       </p>

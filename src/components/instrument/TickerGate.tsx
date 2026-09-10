@@ -9,6 +9,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Horizon from "@/components/hud/Horizon";
+import DeskCaption from "@/components/hud/DeskCaption";
+
+/* Desk caption for the first-visit tour: the window is the first thing a new visitor sees */
+const DESK_G1 = "first, the vehicle. name the token you're looking at. nothing to name yet, take the hatch below and play the narrative.";
 
 type Status = "asking" | "checking" | "found" | "missing" | "error";
 
@@ -38,9 +42,13 @@ const ADVANCE_WITH_POOL_MS = 2600; // two lines to read — hold the acknowledgm
 
 export default function TickerGate({
   onDone,
+  tour = false,
+  onSkipTour,
 }: {
   /* ticker (uppercased, $-less) or null for a narrative play */
   onDone: (ticker: string | null) => void;
+  tour?: boolean;
+  onSkipTour?: () => void;
 }) {
   const [value, setValue] = useState("");
   const [status, setStatus] = useState<Status>("asking");
@@ -113,7 +121,9 @@ export default function TickerGate({
     ) : null;
 
   return (
-    <main className="relative flex min-h-[calc(100vh-140px)] items-center justify-center px-6">
+    <>
+    {/* on the tour the caption sits fixed at the bottom; the room leaves it space */}
+    <main className={`relative flex min-h-[calc(100vh-140px)] items-center justify-center px-6 ${tour ? "pb-28" : ""}`}>
       <Horizon fixed />
       <div className="pixel-box w-[min(92vw,460px)] border border-line px-6 py-6" style={{ background: "var(--bg)" }}>
         <p className="m-0 mb-5 font-mono text-[12.5px] leading-relaxed">
@@ -175,5 +185,7 @@ export default function TickerGate({
         )}
       </div>
     </main>
+    {tour && onSkipTour && <DeskCaption text={DESK_G1} onSkip={onSkipTour} />}
+    </>
   );
 }

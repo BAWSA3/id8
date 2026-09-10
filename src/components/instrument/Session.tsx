@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   emptyStructure,
+  isFreshStored,
   nodesFromExtraction,
   sessionSlug,
   statedInvalidation,
+  tapeWaitText,
   SESSION_STORE_KEY as STORE_KEY,
   TOUR_SEEN_KEY,
   type Challenge,
+  type ChallengeProgress,
   type Extraction,
   type FeedLine,
   type QA,
@@ -30,6 +33,11 @@ import Commit from "./Commit";
 type Stage = "present" | "clarify" | "cockpit" | "structure" | "commit";
 type View = Stage | "gate";
 type ChallengeStatus = "idle" | "loading" | "ready" | "error";
+/* one line of the tape's stream */
+type TapeEvent =
+  | ChallengeProgress
+  | { stage: "done"; challenge: Challenge }
+  | { stage: "error"; error: string; message: string };
 const PHASE_INDEX: Record<Stage, number> = { present: 0, clarify: 1, cockpit: 2, structure: 3, commit: 4 };
 
 interface Stored {
@@ -53,6 +61,9 @@ export default function Session() {
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [challengeStatus, setChallengeStatus] = useState<ChallengeStatus>("idle");
+  /* where the tape is while it runs, and when it started (the desk keeps the clock) */
+  const [tapeProgress, setTapeProgress] = useState<ChallengeProgress | null>(null);
+  const [tapeStartedAt, setTapeStartedAt] = useState(0);
   const [structure, setStructure] = useState<StructureState>(emptyStructure);
   const [hydrated, setHydrated] = useState(false);
   /* first visit only: the desk teaches while it builds itself */
@@ -71,9 +82,10 @@ export default function Session() {
       try {
         const seen = !!localStorage.getItem(TOUR_SEEN_KEY);
         const raw = localStorage.getItem(STORE_KEY);
-        if (!seen && !raw) setTour(true);
-        if (raw) {
-          const s: Stored = JSON.parse(raw);
+        const s: Stored | null = raw ? (JSON.parse(raw) as Stored) : null;
+        /* first visit = nothing on the desk yet. an empty blob left behind still reads as fresh */
+        if (!seen && (!s || isFreshStored(s))) setTour(true);
+        if (s) {
           if (typeof s.thesis === "string") setThesis(s.thesis);
           if (typeof s.ticker === "string" || s.ticker === null) setTicker(s.ticker);
           else if (typeof s.thesis === "string" && s.thesis.trim()) setTicker(null); // pre-gate session: don't re-ask
@@ -101,15 +113,20 @@ export default function Session() {
 
   useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem(
-      STORE_KEY,
-      JSON.stringify({ thesis, stage, qa, extraction, challenge, ticker, structure } satisfies Stored)
-    );
+    const stored = { thesis, stage, qa, extraction, challenge, ticker, structure } satisfies Stored;
+    /* an empty desk leaves nothing behind, so the next visit still reads as the first */
+    if (isFreshStored(stored)) {
+      localStorage.removeItem(STORE_KEY);
+      return;
+    }
+    localStorage.setItem(STORE_KEY, JSON.stringify(stored));
   }, [thesis, stage, qa, extraction, challenge, ticker, structure, hydrated]);
 
   const fetchChallenge = useCallback(async () => {
     if (fetching.current || !extraction) return;
     fetching.current = true;
+    setTapeProgress(null);
+    setTapeStartedAt(Date.now());
     setChallengeStatus("loading");
     try {
       const res = await fetch("/api/challenge", {
@@ -117,16 +134,50 @@ export default function Session() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ thesis, extraction, ...(ticker ? { ticker } : {}) }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.message ?? "analyst error");
-      setChallenge(data.challenge);
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message ?? "analyst error");
+      }
+      /* the tape streams: one JSON event per line, progress as it moves, the challenge last */
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      const landed: { challenge: Challenge | null } = { challenge: null };
+      let buf = "";
+      const take = (line: string) => {
+        const ev = JSON.parse(line) as TapeEvent;
+        if (ev.stage === "done") landed.challenge = ev.challenge;
+        else if (ev.stage === "error") throw new Error(ev.message);
+        else setTapeProgress(ev);
+      };
+      for (;;) {
+        const { done, value } = await reader.read();
+        buf += decoder.decode(value, { stream: !done });
+        let nl = buf.indexOf("\n");
+        while (nl >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (line) take(line);
+          nl = buf.indexOf("\n");
+        }
+        if (done) break;
+      }
+      if (buf.trim()) take(buf.trim());
+      if (!landed.challenge) throw new Error("the tape ended early");
+      setChallenge(landed.challenge);
       setChallengeStatus("ready");
     } catch {
       setChallengeStatus("error");
     } finally {
+      setTapeProgress(null);
       fetching.current = false;
     }
   }, [thesis, extraction, ticker]);
+
+  /* the desk's waiting line under the feed, only while the tape runs */
+  const tapeWait = useMemo(
+    () => (challengeStatus === "loading" ? { text: tapeWaitText(tapeProgress), startedAt: tapeStartedAt } : undefined),
+    [challengeStatus, tapeProgress, tapeStartedAt]
+  );
 
   useEffect(() => {
     if (stage === "cockpit" && hydrated && extraction && !challenge && challengeStatus === "idle") {
@@ -151,7 +202,7 @@ export default function Session() {
       return [{ agent: "analyst", text: "The tape hiccupped. Retry when you're ready." }];
     }
     return [
-      { agent: "analyst", text: "Reading the tape. Give me a moment." },
+      { agent: "analyst", text: "On the tape." },
       { agent: "skeptic", text: "Every assumption up there is a target." },
     ];
   }, [challenge, challengeStatus]);
@@ -219,6 +270,8 @@ export default function Session() {
               setTicker(t ?? null);
               setTimeout(() => document.getElementById("id8-input")?.focus(), 520);
             }}
+            tour={tour}
+            onSkipTour={endTour}
           />
         )}
         {shownView === "present" && (
@@ -251,6 +304,7 @@ export default function Session() {
             edges={graph.edges}
             activePhase={2}
             feed={feed}
+            wait={tapeWait}
             challengeError={challengeStatus === "error"}
             onRetryChallenge={fetchChallenge}
             onRule={

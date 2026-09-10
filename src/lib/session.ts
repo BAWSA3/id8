@@ -51,6 +51,37 @@ export const MAX_ANSWER_CHARS = 3000;
 export const SESSION_STORE_KEY = "id8.session.v3";
 export const TOUR_SEEN_KEY = "id8.tour.v1";
 
+/* A stored session with nothing on it yet: no thesis, no vehicle named, no answers.
+   Session (the tour) and FrontDoor (resume) share this one definition of a new visitor. */
+export function isFreshStored(s: unknown): boolean {
+  if (!s || typeof s !== "object") return true;
+  const o = s as { thesis?: unknown; ticker?: unknown; qa?: unknown; extraction?: unknown };
+  const thesis = typeof o.thesis === "string" ? o.thesis.trim() : "";
+  return !thesis && o.ticker === undefined && (!Array.isArray(o.qa) || o.qa.length === 0) && !o.extraction;
+}
+
+/* What the tape reports while it works. The desk reads these out; the agents never do. */
+export type ChallengeProgress =
+  | { stage: "planned"; sectors: string[]; symbols: string[] }
+  | { stage: "gathered"; count: number; labels: string[]; fixture: boolean }
+  | { stage: "reading" };
+
+/* One line of the desk's waiting voice for a given point on the tape */
+export function tapeWaitText(p: ChallengeProgress | null): string {
+  if (!p) return "reading the tape";
+  if (p.stage === "planned") {
+    const names = [...p.sectors.map((s) => s.toLowerCase()), ...p.symbols.map((s) => `$${s.replace(/^\$/, "").toUpperCase()}`)];
+    return names.length ? `pulling · ${names.join(" · ")}` : "pulling the tape";
+  }
+  if (p.stage === "gathered") {
+    const n = p.count;
+    const head = n === 0 ? "nothing on the tape for this one" : n === 1 ? "1 dataset on the desk" : `${n} datasets on the desk`;
+    const tail = n === 0 ? "the analyst says so plainly." : "the analyst reads every one before it speaks.";
+    return `${head}. ${tail}${p.fixture ? " fixture tape." : ""}`;
+  }
+  return "the analyst and the skeptic are reading. this is the long part.";
+}
+
 export function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }

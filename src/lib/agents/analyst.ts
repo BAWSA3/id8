@@ -14,6 +14,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { getNansenAdapter, MockNansenAdapter, type NansenAdapter } from "@/lib/nansen/adapter";
 import { planEvidence, type EvidencePlan } from "@/lib/agents/planner";
 import type { Extraction } from "@/lib/agents/clarifier";
+import type { ChallengeProgress } from "@/lib/session";
 
 const MODEL = "claude-opus-5";
 const client = new Anthropic();
@@ -115,7 +116,13 @@ async function gatherEvidence(adapter: NansenAdapter, plan: EvidencePlan): Promi
   return (await Promise.all(jobs)).filter((d): d is Dataset => d !== null);
 }
 
-export async function runChallenge(thesis: string, extraction: Extraction, ticker?: string): Promise<Challenge> {
+export async function runChallenge(
+  thesis: string,
+  extraction: Extraction,
+  ticker?: string,
+  /* optional: the route streams these to the desk as the tape moves */
+  onProgress?: (e: ChallengeProgress) => void
+): Promise<Challenge> {
   let adapter = getNansenAdapter();
   const plan = await planEvidence(
     thesis,
@@ -128,6 +135,7 @@ export async function runChallenge(thesis: string, extraction: Extraction, ticke
     plan.symbols = [t, ...plan.symbols.filter((s) => s !== t)].slice(0, 2);
     plan.cryptoRelevant = true;
   }
+  onProgress?.({ stage: "planned", sectors: plan.sectors, symbols: plan.symbols });
 
   let datasets: Dataset[] = [];
   if (plan.cryptoRelevant) {
@@ -139,6 +147,7 @@ export async function runChallenge(thesis: string, extraction: Extraction, ticke
     }
   }
   const fixture = adapter.isMock;
+  onProgress?.({ stage: "gathered", count: datasets.length, labels: datasets.map((d) => d.label), fixture });
 
   const assumptions = extraction.assumptions
     .map((a, i) => `${i + 1}. ${a.text}`)
@@ -164,6 +173,7 @@ export async function runChallenge(thesis: string, extraction: Extraction, ticke
     "Produce the evidence cards, analyst line, and skeptic line now, following your rules exactly.",
   ].join("\n\n");
 
+  onProgress?.({ stage: "reading" });
   const response = await client.messages.parse({
     model: MODEL,
     max_tokens: 8000,

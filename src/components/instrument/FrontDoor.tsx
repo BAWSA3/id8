@@ -5,7 +5,7 @@
    (element #id8-seed rendered by Present beneath this overlay). */
 
 import { useEffect, useRef, useState } from "react";
-import { SESSION_STORE_KEY, sessionSlug } from "@/lib/session";
+import { SESSION_STORE_KEY, isFreshStored, sessionSlug } from "@/lib/session";
 import Horizon from "@/components/hud/Horizon";
 import { localBookCount } from "@/lib/book";
 
@@ -83,8 +83,11 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
         const raw = localStorage.getItem(SESSION_STORE_KEY);
         if (raw) {
           const s = JSON.parse(raw) as { thesis?: string; ticker?: string | null };
-          if (s?.ticker) setResumeSlug(`$${s.ticker}`);
-          else if (s?.thesis) setResumeSlug(sessionSlug(s.thesis));
+          /* same definition of a new visitor as the tour: an empty desk is not a session to resume */
+          if (!isFreshStored(s)) {
+            if (s?.ticker) setResumeSlug(`$${s.ticker}`);
+            else if (s?.thesis?.trim()) setResumeSlug(sessionSlug(s.thesis));
+          }
         }
       } catch {
         /* no storage — fresh visit */
