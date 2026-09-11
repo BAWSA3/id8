@@ -4,7 +4,7 @@ For the demo recording and for anyone judging from the link. One continuous
 take. Desktop, fresh browser (the desk tour plays on a first visit; skip it
 if you want the short cut).
 
-**Link:** https://id8-blush.vercel.app
+**Link:** https://id8.markets
 
 ## Beat 1 · the door (5s)
 

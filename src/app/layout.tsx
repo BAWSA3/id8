@@ -16,6 +16,7 @@ const silkscreen = Silkscreen({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://id8.markets"),
   title: "id8 · a canvas for your thesis",
   description:
     "The thesis desk for narrative traders. Present your play; id8 interrogates it and tests it against live Nansen smart-money flows. It never writes the trade. Conviction stays yours.",

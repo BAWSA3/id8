@@ -38,7 +38,7 @@ Space rolls a take by hand on `/film` without `?auto=1`. R reloads at any point.
 A
 > building id8 for this. a canvas for your thesis.
 > you bring the play. the desk asks the hard questions, then the tape weighs in with live Nansen smart money flows. it never writes the trade.
-> id8-blush.vercel.app
+> id8.markets
 
 B
 > most theses die in a notes app. id8 is a desk for them.

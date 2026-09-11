@@ -2,7 +2,7 @@
 
 **id8 · a canvas for your thesis**
 
-Live: https://id8-blush.vercel.app
+Live: https://id8.markets
 Code: https://github.com/BAWSA3/id8
 
 id8 is a thesis desk for narrative traders. You present a play in your own

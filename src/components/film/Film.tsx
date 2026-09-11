@@ -15,7 +15,7 @@ import { Puppet } from "./Puppet";
 import { runFilm } from "./timeline";
 
 const TYPE_SPEED = 3.2;
-const SITE = "id8-blush.vercel.app";
+const SITE = "id8.markets";
 const STAGE_W = 1440;
 const STAGE_H = 810;
 

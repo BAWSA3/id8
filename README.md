@@ -4,7 +4,7 @@ The thesis desk for narrative traders. You present a play; id8 interrogates
 it, tests it against the live Nansen tape, and hands you back a doc with
 receipts. It never writes the trade.
 
-**Live:** https://id8-blush.vercel.app
+**Live:** https://id8.markets
 **Built for:** the Nansen API vibe coding challenge (Sept 14–30, 2026).
 Meant to live on after it.
 
