@@ -232,6 +232,7 @@ async function nativeMarket(symbol: string): Promise<TokenMarket | null> {
       note: `chain-native coin. price from the deepest wrapped pool (${native.via}); market cap and 7d change not on this feed right now. volume is the pool's 24h times seven. ${flowsNote}`,
     };
   }
+  if (geckoCache.size >= 500) geckoCache.delete(geckoCache.keys().next().value!);
   geckoCache.set(symbol, { at: Date.now(), market });
   return market;
 }

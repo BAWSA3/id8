@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { rateLimited } from "@/lib/rate-limit";
+import { clientIp, rateLimited, sameOrigin } from "@/lib/rate-limit";
 
 /* The record: an email left at the book, for the day accounts land.
    Server-side insert through PostgREST with the public key; the table is
@@ -23,7 +23,8 @@ const Body = z.object({
 
 export async function POST(req: Request) {
   if (!wired()) return NextResponse.json({ error: "unwired", message: "The record is not open yet." }, { status: 503 });
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const ip = clientIp(req);
+  if (!sameOrigin(req)) return NextResponse.json({ error: "forbidden", message: "Wrong door." }, { status: 403 });
   if (rateLimited("lead", ip, { maxPerWindow: 5, dailyCap: 3000 })) {
     return NextResponse.json({ error: "rate_limited", message: "Give it a minute." }, { status: 429 });
   }
@@ -45,6 +46,6 @@ export async function POST(req: Request) {
   }).catch(() => null);
   /* 409 = already on the list, which is the same outcome for the trader */
   if (res && (res.ok || res.status === 409)) return NextResponse.json({ ok: true });
-  console.error("lead insert failed:", res?.status, await res?.text().catch(() => ""));
+  console.error("lead insert failed:", res?.status ?? "no response");
   return NextResponse.json({ error: "store_error", message: "That did not take. Try again in a moment." }, { status: 502 });
 }

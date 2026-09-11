@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getNansenAdapter } from "@/lib/nansen/adapter";
-import { rateLimited } from "@/lib/rate-limit";
+import { clientIp, rateLimited, sameOrigin } from "@/lib/rate-limit";
 import { pairContext } from "@/lib/dexscreener";
 
 /* Ticker resolve for the desk's opening window ("what are we looking at?").
@@ -18,7 +18,8 @@ const BodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const ip = clientIp(req);
+  if (!sameOrigin(req)) return NextResponse.json({ error: "forbidden", message: "Wrong door." }, { status: 403 });
   if (rateLimited("ticker", ip, { maxPerWindow: 12, dailyCap: 5000 })) {
     return NextResponse.json(
       { error: "rate_limited", message: "The tape needs a breather. Try again in a minute." },

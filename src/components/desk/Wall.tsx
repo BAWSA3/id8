@@ -106,7 +106,18 @@ export default function Wall({ pins, onPin, onUnpin }: { pins: Pin[]; onPin: (p:
         <div ref={grid} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {pins.map((p) => (
             <div key={p.id} className="min-w-0">
-              <div className="[&_.twitter-tweet]:!m-0" dangerouslySetInnerHTML={{ __html: p.html }} />
+              {/* X's own markup never touches the DOM: the blockquote is rebuilt from plain text,
+                  and widgets.js upgrades it from the status link like any other embed */}
+              <div className="[&_.twitter-tweet]:!m-0">
+                <blockquote className="twitter-tweet" data-theme="dark" data-dnt="true" data-conversation="none">
+                  <p>{p.text}</p>
+                  {p.author}
+                  {p.handle ? ` (${p.handle})` : ""}{" "}
+                  <a href={canonicalStatusUrl(p.url) ?? "https://x.com"} rel="noopener noreferrer">
+                    {p.postedAt ?? "on x"}
+                  </a>
+                </blockquote>
+              </div>
               <div className="mt-1 flex items-baseline gap-3 font-mono text-[9px] uppercase tracking-[.14em] text-faint">
                 <span className="truncate">{p.handle || p.author}</span>
                 <button onClick={() => onUnpin(p.id)} className="ml-auto whitespace-nowrap border-0 bg-transparent p-0 font-mono text-[9px] uppercase tracking-[.14em] text-faint transition-colors hover:text-bad">

@@ -223,7 +223,7 @@ export default function Commit({ thesis, qa, ticker, extraction, challenge, stru
             <a
               href={link}
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               className="font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-colors hover:text-muted"
             >
               [ open the doc ]

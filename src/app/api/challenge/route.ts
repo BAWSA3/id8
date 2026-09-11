@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { AnalystRefusal, runChallenge } from "@/lib/agents/analyst";
-import { rateLimited } from "@/lib/rate-limit";
+import { clientIp, rateLimited, sameOrigin } from "@/lib/rate-limit";
 import { MAX_THESIS_CHARS } from "@/lib/session";
 
 /* Same security posture as /api/clarify: zod-validated + capped inputs,
@@ -35,7 +35,8 @@ const BodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const ip = clientIp(req);
+  if (!sameOrigin(req)) return NextResponse.json({ error: "forbidden", message: "Wrong door." }, { status: 403 });
   if (rateLimited("challenge", ip, { maxPerWindow: 6, dailyCap: 1500 })) {
     return NextResponse.json(
       { error: "rate_limited", message: "The analyst needs a breather. Try again in a minute." },

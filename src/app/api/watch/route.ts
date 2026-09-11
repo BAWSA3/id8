@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getNansenAdapter, NANSEN_SECTORS, type TokenMarket } from "@/lib/nansen/adapter";
 import { pairContext } from "@/lib/dexscreener";
 import { nativePrice } from "@/lib/dexscreener";
-import { rateLimited } from "@/lib/rate-limit";
+import { clientIp, rateLimited, sameOrigin } from "@/lib/rate-limit";
 import { parseClause, splitClauses, type SectorRead, type TokenRead, type WatchCheck, type WatchRead, type WatchStatus } from "@/lib/watch";
 
 /* The watch: read the tape for a play and check its invalidation. Nansen
@@ -27,7 +27,8 @@ function worst(checks: WatchCheck[]): WatchStatus {
 }
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const ip = clientIp(req);
+  if (!sameOrigin(req)) return NextResponse.json({ error: "forbidden", message: "Wrong door." }, { status: 403 });
   if (rateLimited("watch", ip, { maxPerWindow: 30, dailyCap: 3000 })) {
     return NextResponse.json({ error: "rate_limited", message: "The tape needs a breather. Try again in a minute." }, { status: 429 });
   }
@@ -55,8 +56,10 @@ export async function POST(req: Request) {
     const t = await resolve(sym);
     return t ? { symbol: t.symbol, priceUsd: t.priceUsd, via: `${t.chain} spot` } : null;
   };
+  const MAX_RESOLVES = 3; // the vehicle plus two names the invalidation mentions
   const resolve = async (sym: string) => {
     if (!resolved.has(sym)) {
+      if (resolved.size >= MAX_RESOLVES) return null;
       try {
         resolved.set(sym, await adapter.resolveToken(sym));
       } catch {
@@ -174,6 +177,7 @@ export async function POST(req: Request) {
   }
 
   const read: WatchRead = { playId: body.playId, readAt: new Date().toISOString(), live: !adapter.isMock, token, sector, status: worst(checks), checks };
+  if (cache.size >= 2000) cache.delete(cache.keys().next().value!);
   cache.set(key, { at: Date.now(), read });
   return NextResponse.json({ read, cached: false });
 }

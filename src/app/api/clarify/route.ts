@@ -7,7 +7,7 @@ import {
   extract,
   nextQuestion,
 } from "@/lib/agents/clarifier";
-import { rateLimited } from "@/lib/rate-limit";
+import { clientIp, rateLimited, sameOrigin } from "@/lib/rate-limit";
 import { MAX_ANSWER_CHARS, MAX_THESIS_CHARS } from "@/lib/session";
 
 /* Security posture (anonymous-by-design demo — no auth, no DB):
@@ -29,7 +29,8 @@ const BodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const ip = clientIp(req);
+  if (!sameOrigin(req)) return NextResponse.json({ error: "forbidden", message: "Wrong door." }, { status: 403 });
   /* a session is up to five calls; the daily ceiling is sized for a launch day, the spend cap on the key is the hard stop */
   if (rateLimited("clarify", ip, { maxPerWindow: 12, dailyCap: 2500 })) {
     return NextResponse.json(

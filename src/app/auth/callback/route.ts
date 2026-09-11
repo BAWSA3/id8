@@ -5,7 +5,9 @@ import { supabaseServer } from "@/lib/supabase/server";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") ?? "/desk";
+  const raw = url.searchParams.get("next") ?? "/desk";
+  /* a path on this site, never another host (//evil or https://evil would win over the base) */
+  const next = raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") ? raw : "/desk";
   if (code) {
     const supabase = await supabaseServer();
     const { error } = await supabase.auth.exchangeCodeForSession(code);

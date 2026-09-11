@@ -1,6 +1,7 @@
 -- id8 · leads. Run once in the Supabase SQL editor (Jeffrey applies migrations).
 -- One table, insert-only from the public key. Nobody can read it through the API;
 -- read it in the dashboard. Accounts land later; this is the list that hears first.
+-- The server route uses the PUBLISHABLE (anon) key; never give it the secret key.
 
 create extension if not exists pgcrypto;
 

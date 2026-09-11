@@ -101,6 +101,7 @@ export async function pairContext(chain: string, tokenAddress: string, top = 3):
       })
       .sort((a, b) => b.liquidityUsd - a.liquidityUsd);
     const ctx = { pools: pools.slice(0, top), poolCount: pools.length };
+    if (cache.size >= 2000) cache.delete(cache.keys().next().value!);
     cache.set(key, { at: Date.now(), ctx });
     return ctx;
   } catch {

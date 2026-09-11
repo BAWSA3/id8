@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Silkscreen } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
+import Analytics from "@/components/Analytics";
 import "./globals.css";
 
 const jbMono = JetBrains_Mono({

@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { decodeDoc } from "@/lib/doc-server";
 import { ledgerLine } from "@/lib/doc";
+import { clientIp, rateLimited } from "@/lib/rate-limit";
 
 /* The share card: the thesis after the tape, the ledger, the invalidation.
    Same darkroom as the front-door card; the doc travels in the URL. */
@@ -10,9 +11,12 @@ export const dynamic = "force-dynamic";
 const trim = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 
 export async function GET(req: Request) {
+  if (rateLimited("og", clientIp(req), { maxPerWindow: 30, dailyCap: 5000 })) return new Response("", { status: 429 });
   const d = new URL(req.url).searchParams.get("d") ?? undefined;
   const doc = decodeDoc(d);
   const size = { width: 1200, height: 630 };
+  /* the card is a pure function of the link, so the edge may keep it */
+  const headers = { "Cache-Control": "public, max-age=0, s-maxage=86400" };
 
   if (!doc) {
     return new ImageResponse(
@@ -21,7 +25,7 @@ export async function GET(req: Request) {
           NOTHING ON THE BOOK
         </div>
       ),
-      size
+      { ...size, headers }
     );
   }
 
@@ -45,10 +49,10 @@ export async function GET(req: Request) {
           <div style={{ display: "flex", alignItems: "baseline", fontSize: 44, fontWeight: 700, letterSpacing: -1 }}>
             id<span style={{ fontWeight: 300, fontStyle: "italic" }}>8</span>
             <span style={{ marginLeft: 26, fontSize: 18, fontWeight: 400, letterSpacing: 5, color: "#8b8678" }}>
-              ON THE BOOK{doc.ticker ? ` · $${doc.ticker.toUpperCase()}` : ""}
+              ON THE BOOK{doc.ticker ? ` · $${trim(doc.ticker, 15).toUpperCase()}` : ""}
             </span>
           </div>
-          <div style={{ display: "flex", fontSize: 16, letterSpacing: 4, color: "#4e4b43" }}>{doc.at}</div>
+          <div style={{ display: "flex", fontSize: 16, letterSpacing: 4, color: "#4e4b43" }}>{trim(doc.at, 24)}</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -70,6 +74,6 @@ export async function GET(req: Request) {
         </div>
       </div>
     ),
-    size
+    { ...size, headers }
   );
 }

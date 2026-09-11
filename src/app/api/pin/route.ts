@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { rateLimited } from "@/lib/rate-limit";
+import { clientIp, rateLimited, sameOrigin } from "@/lib/rate-limit";
 import { canonicalStatusUrl } from "@/lib/pins";
 
 /* Pin an X post: resolve it through X's public oEmbed (no key, no auth),
@@ -22,7 +22,8 @@ const strip = (html: string) =>
     .trim();
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const ip = clientIp(req);
+  if (!sameOrigin(req)) return NextResponse.json({ error: "forbidden", message: "Wrong door." }, { status: 403 });
   if (rateLimited("pin", ip, { maxPerWindow: 20, dailyCap: 2000 })) {
     return NextResponse.json({ error: "rate_limited", message: "The wall needs a breather. Try again in a minute." }, { status: 429 });
   }
@@ -48,12 +49,12 @@ export async function POST(req: Request) {
     const bodyMatch = /<p[^>]*>([\s\S]*?)<\/p>/.exec(html);
     return NextResponse.json({
       pin: {
-        url: o.url ?? url,
+        url: canonicalStatusUrl(o.url ?? "") ?? url,
         author: (o.author_name ?? "").slice(0, 80),
         handle: handleMatch ? `@${handleMatch[1]}` : "",
         authorUrl: o.author_url ?? "",
         text: strip(bodyMatch ? bodyMatch[1] : html).slice(0, 1200),
-        html,
+        html: "", // the wall rebuilds the embed from text; raw markup is not kept
         postedAt: dateMatch ? dateMatch[1] : null,
       },
     });
