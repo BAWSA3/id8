@@ -127,7 +127,8 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
       if (report && canvas) {
         const cr = canvas.getBoundingClientRect();
         report.current.clear();
-        for (const n of nodes) report.current.set(n.id, { x: cr.left + P[n.id].x, y: cr.top + P[n.id].y });
+        const sx = cr.width / W, sy = cr.height / H;
+        for (const n of nodes) report.current.set(n.id, { x: cr.left + P[n.id].x * sx, y: cr.top + P[n.id].y * sy });
       }
       const core = nodes.find((n) => n.kind === "core");
       const c = core ? P[core.id] : { x: W / 2, y: H / 2, s: 1, z: 0 };
@@ -271,7 +272,7 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
         v.pitch = Math.max(-1.1, Math.min(0.4, v.pitch + dy * 0.004));
         lx = e.clientX; ly = e.clientY;
       } else {
-        hover = pick(e.clientX - r.left, e.clientY - r.top);
+        hover = pick((e.clientX - r.left) * (W / r.width), (e.clientY - r.top) * (H / r.height));
         canvas.style.cursor = hover ? "pointer" : "grab";
       }
     };
@@ -280,7 +281,7 @@ export default function Constellation({ nodes, edges, lockedId, onLock, onYaw, i
       canvas.classList.remove("dragging");
       if (moved < 6) {
         const r = canvas.getBoundingClientRect();
-        const id = pick(e.clientX - r.left, e.clientY - r.top);
+        const id = pick((e.clientX - r.left) * (W / r.width), (e.clientY - r.top) * (H / r.height));
         if (id) onLock(id);
       }
     };

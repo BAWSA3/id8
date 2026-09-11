@@ -3,24 +3,32 @@
    Nothing here is invented: every line came off the live routes on capture day. */
 
 import type { Challenge, ChallengeProgress, Extraction, QA } from "@/lib/session";
+import type { WatchRead } from "@/lib/watch";
 
 export interface Take {
   capturedAt: string;
   thesis: string;
   ticker: string;
+  /* the vehicle by chain + address when the take was named by contract */
+  vehicle?: { chain: string; address: string };
   tickerCheck: unknown;
   qa: QA[];
   extraction: Extraction;
   tape: ChallengeProgress[];
   challenge: Challenge;
+  /* the desk's watch read for this play, captured live */
+  watch?: WatchRead;
+  /* why the trader holds the first contested line at the ruling */
+  holdReason?: string;
 }
 
 /* how long each shimmed call takes to answer, in ms */
 export const SHIM_MS = {
-  ticker: 650,
-  question: 420,
-  extract: 900,
-  tape: [320, 520, 380, 1250] as const, // planned, gathered, reading, done
+  ticker: 600,
+  question: 320,
+  extract: 650,
+  watch: 600,
+  tape: [300, 480, 360, 900] as const, // planned, gathered, reading, done
 };
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -47,6 +55,11 @@ export function installFilmFetch(take: Take): () => void {
           : json({ done: false, question: take.qa[i].q }, SHIM_MS.question);
       }
       return json({ extraction: take.extraction }, SHIM_MS.extract);
+    }
+
+    if (path === "/api/watch" && take.watch) {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { playId?: string };
+      return json({ read: { ...take.watch, playId: body.playId ?? take.watch.playId, readAt: new Date().toISOString() }, cached: false }, SHIM_MS.watch);
     }
 
     if (path === "/api/challenge") {

@@ -6,6 +6,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Session from "@/components/instrument/Session";
+import Desk from "@/components/desk/Desk";
+import { Camera } from "./Camera";
 import EndCard from "./EndCard";
 import { StageContext, type Stage } from "@/lib/stage";
 import { SESSION_STORE_KEY, TOUR_SEEN_KEY } from "@/lib/session";
@@ -28,6 +30,10 @@ export default function Film({ auto = false, end = false }: { auto?: boolean; en
   const [typeSpeed, setTypeSpeed] = useState(TYPE_SPEED);
   const stage = useMemo<Stage>(() => ({ typeSpeed, boardScreen }), [typeSpeed]);
   const puppet = useRef<Puppet | null>(null);
+  const cameraEl = useRef<HTMLDivElement>(null);
+  const scrollEl = useRef<HTMLDivElement>(null);
+  /* the session until the play is booked; then the desk */
+  const [view, setView] = useState<"session" | "desk">("session");
 
   /* a clean desk every take: no session, no tour. the book is left alone. */
   useEffect(() => {
@@ -51,6 +57,9 @@ export default function Film({ auto = false, end = false }: { auto?: boolean; en
     runFilm(p, take as unknown as Take, {
       boardScreen,
       setTypeSpeed,
+      camera: new Camera(cameraEl.current!),
+      scroller: scrollEl.current!,
+      openDesk: () => setView("desk"),
       onBeat: (name, ms) => {
         console.log(`[film] ${name} · ${(ms / 1000).toFixed(1)}s`);
         setBeats((b) => [...b, `${name} ${(ms / 1000).toFixed(1)}s`]);
@@ -73,6 +82,21 @@ export default function Film({ auto = false, end = false }: { auto?: boolean; en
     return () => window.removeEventListener("keydown", onKey);
   }, [roll]);
 
+  /* the commit page's [ open the desk ] is a link to /desk; in the film the desk opens in place */
+  useEffect(() => {
+    if (!rolling) return;
+    const h = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.('a[href="/desk"]');
+      if (a) {
+        e.preventDefault();
+        e.stopPropagation();
+        setView("desk");
+      }
+    };
+    document.addEventListener("click", h, true);
+    return () => document.removeEventListener("click", h, true);
+  }, [rolling]);
+
   useEffect(() => {
     if (!auto || !ready) return;
     const t = setTimeout(roll, 1100);
@@ -85,7 +109,13 @@ export default function Film({ auto = false, end = false }: { auto?: boolean; en
 
   return (
     <StageContext.Provider value={stage}>
-      {ready && <Session />}
+      {/* the stage: a viewport-sized box the camera scales; the product scrolls inside it */}
+      <div ref={cameraEl} className="fixed inset-0 overflow-hidden bg-bg">
+        <div ref={scrollEl} className="absolute inset-0 overflow-x-hidden overflow-y-auto">
+          {ready && view === "session" && <Session />}
+          {ready && view === "desk" && <Desk />}
+        </div>
+      </div>
 
       <EndCard show={ended || end} site={SITE} />
 

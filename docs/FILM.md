@@ -14,7 +14,20 @@
 
 Space rolls a take by hand on `/film` without `?auto=1`. R reloads at any point.
 
-## Beats (measured, 1440×810)
+## The camera and the long cut (2026-09-11)
+
+The stage is a viewport-sized box the film scales around a target (`src/components/film/Camera.ts`): the door pushes in on the body, the window fills the frame while the tape answers, the thesis and the first question come up close, the evidence rows after the line opens, the first ruled line, and the watch on the desk. You record flat; the zooms are in the take. The cut now runs past the board: the ruling (hold the first contested line with a reason, cut the rest, put it on the book), the commit page, and the desk with the book, the token live and the watch reading the tape. The desk opens in place (the commit page's link is intercepted in the film). Runs about 40s at 1440×810.
+
+A take named by contract address (`vehicle` on the take) makes the window switch to `[ contract ]` and paste the address instead of typing a ticker.
+
+### Freeze a new take
+
+```
+node <scratch>/capture.mjs config.json src/lib/film/<name>-take.json
+```
+`config.json`: `{ "ticker": "SOL" }` or `{ "address": "0x…" }`, plus `thesis`, `answers` (four), and `holdReason`. The script runs the live routes (window, four questions, extraction, the tape, the watch) and freezes every line. Point `Film.tsx` at the new file.
+
+## Beats (measured, 1440×810, the short cut before the long one)
 
 | beat | at | what's on screen |
 |---|---|---|

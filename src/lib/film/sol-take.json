@@ -203,5 +203,54 @@
         "note": "Nothing in this feed tracks ETF filings or treasury company purchases. The nearest proxy, the L1/L2 sector, lists only WAVAX, ARB and WETH, with SOL absent from both the accumulation and distribution tables."
       }
     ]
+  },
+  "watch": {
+    "playId": "film-sol",
+    "readAt": "2026-09-11T08:27:50.997Z",
+    "live": true,
+    "token": {
+      "symbol": "SOL",
+      "chain": "solana",
+      "priceUsd": 99.85,
+      "priceChangePct": -3.7,
+      "marketCapUsd": 58572448366,
+      "liquidityUsd": 27310822,
+      "volumeUsd7d": 21504743300,
+      "netflowUsd7d": null,
+      "flows": {
+        "smartTraderNetFlowUsd": -560115,
+        "smartTraderWalletCount": 388,
+        "whaleNetFlowUsd": 671640,
+        "topPnlNetFlowUsd": -4105251,
+        "publicFigureNetFlowUsd": 213554,
+        "freshWalletsNetFlowUsd": 0,
+        "exchangeNetFlowUsd": -3136929
+      },
+      "pool": {
+        "pair": "SOL/USDC",
+        "dex": "raydium",
+        "version": null,
+        "liquidityUsd": 27310822,
+        "volume24hUsd": 67095129
+      }
+    },
+    "sector": null,
+    "status": "breached",
+    "checks": [
+      {
+        "clause": "SOL loses 180 on a daily close, the close above 180 must hold on every day of the window,",
+        "kind": "price",
+        "status": "breached",
+        "figure": "$99.69",
+        "detail": "SOL reads $99.69 (SOL/USDC raydium) against $180."
+      },
+      {
+        "clause": "Nansen smart money seven day netflow on SOL turns negative by more than ten million dollars",
+        "kind": "netflow",
+        "status": "breached",
+        "figure": "-$560,115",
+        "detail": "SOL smart trader 7d netflow reads -$560,115 across 388 wallets."
+      }
+    ]
   }
 }
