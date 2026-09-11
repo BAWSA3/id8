@@ -12,8 +12,9 @@ import Stone, { type StonePose } from "@/components/matter/Stone";
 import Grain from "@/components/matter/Grain";
 import IndexBand from "@/components/hud/IndexBand";
 
-const POSE: StonePose = { anchor: [1.0, 0.5], radius: 0.46 };
-const PORTRAIT: StonePose = { anchor: [0.5, 0.3], radius: 0.58 };
+/* the body sits inside the frame, right of center; the copy keeps the left */
+const POSE: StonePose = { anchor: [0.73, 0.5], radius: 0.26 };
+const PORTRAIT: StonePose = { anchor: [0.5, 0.3], radius: 0.46 };
 
 export default function FrontDoor({ onDone }: { onDone: () => void }) {
   const coreRef = useRef<HTMLSpanElement>(null);
@@ -92,6 +93,8 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
         className={`fixed inset-0 z-[60] overflow-hidden bg-bg transition-opacity duration-700 ${leaving ? "pointer-events-none opacity-0" : "opacity-100"}`}
       >
         <Stone pose={POSE} portrait={PORTRAIT} />
+        {/* grain lives on the body, under the copy */}
+        <Grain strength={0.42} />
         {/* the body's core: where the traveler takes off from */}
         <span
           ref={coreRef}
@@ -138,7 +141,6 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
           right={["nansen smart money", "live · 29 sectors · 26 chains"]}
           tail="©2026"
         />
-        <Grain strength={0.7} />
       </div>
 
       {/* the traveling eclipse — ink at takeoff, sage on landing */}

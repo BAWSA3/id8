@@ -13,6 +13,7 @@ export default function EndCard({ show, site }: { show: boolean; site: string })
       aria-hidden={!show}
     >
       <Stone pose={{ anchor: [0.5, 0.33], radius: 0.17 }} portrait={{ anchor: [0.5, 0.28], radius: 0.4 }} />
+      <Grain strength={0.42} />
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 pt-[32vh] text-center">
         <h1 className="m-0 text-[clamp(40px,5vw,72px)] font-bold leading-none tracking-[-.03em]">
           id<i className="font-light italic">8</i>
@@ -24,7 +25,6 @@ export default function EndCard({ show, site }: { show: boolean; site: string })
         </p>
       </div>
       <IndexBand className="absolute inset-x-[5vw] bottom-[5vh]" left={["thesis desk", "end of plate"]} right={["built on the nansen api", "never writes your trade"]} />
-      <Grain strength={0.7} />
     </div>
   );
 }
