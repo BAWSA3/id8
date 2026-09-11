@@ -36,7 +36,7 @@ const BodySchema = z.object({
 
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (rateLimited("challenge", ip, { maxPerWindow: 6, dailyCap: 300 })) {
+  if (rateLimited("challenge", ip, { maxPerWindow: 6, dailyCap: 1500 })) {
     return NextResponse.json(
       { error: "rate_limited", message: "The analyst needs a breather. Try again in a minute." },
       { status: 429 }

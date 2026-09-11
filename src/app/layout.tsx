@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Silkscreen } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const jbMono = JetBrains_Mono({
@@ -42,6 +43,7 @@ export default function RootLayout({
         <span className="crop tl" /><span className="crop tr" />
         <span className="crop bl" /><span className="crop br" />
         {children}
+        <Analytics />
       </body>
     </html>
   );

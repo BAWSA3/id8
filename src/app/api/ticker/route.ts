@@ -19,7 +19,7 @@ const BodySchema = z.object({
 
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (rateLimited("ticker", ip, { maxPerWindow: 12, dailyCap: 1500 })) {
+  if (rateLimited("ticker", ip, { maxPerWindow: 12, dailyCap: 5000 })) {
     return NextResponse.json(
       { error: "rate_limited", message: "The tape needs a breather. Try again in a minute." },
       { status: 429 }

@@ -30,7 +30,8 @@ const BodySchema = z.object({
 
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (rateLimited("clarify", ip)) {
+  /* a session is up to five calls; the daily ceiling is sized for a launch day, the spend cap on the key is the hard stop */
+  if (rateLimited("clarify", ip, { maxPerWindow: 12, dailyCap: 2500 })) {
     return NextResponse.json(
       { error: "rate_limited", message: "The clarifier needs a breather. Try again in a minute." },
       { status: 429 }
