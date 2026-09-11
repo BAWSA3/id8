@@ -21,6 +21,7 @@ import Panel from "@/components/hud/Panel";
 import DocView from "./DocView";
 import PlayBoard from "./PlayBoard";
 import DeskAsk from "./DeskAsk";
+import LeadLine from "./LeadLine";
 import Orb from "./Orb";
 
 type State = "loading" | "ask" | "room";
@@ -230,6 +231,8 @@ export default function Desk() {
           </button>
         )}
       </div>
+
+      {local && <LeadLine source="desk" ticker={plays.find((p) => p.id === selected)?.session.ticker ?? null} className="relative z-10 mb-8 max-w-[560px]" />}
 
       <div className="relative z-10 grid gap-6 md:grid-cols-[240px_minmax(0,1fr)_260px]">
         {/* the book */}

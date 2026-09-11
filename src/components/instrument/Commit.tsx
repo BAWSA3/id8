@@ -12,6 +12,7 @@ import { currentUser, savePlay } from "@/lib/desk";
 import { saveLocalPlay } from "@/lib/book";
 import { supabaseConfigured } from "@/lib/supabase/client";
 import DeskAsk from "@/components/desk/DeskAsk";
+import LeadLine from "@/components/desk/LeadLine";
 import Horizon from "@/components/hud/Horizon";
 
 interface Props {
@@ -197,6 +198,7 @@ export default function Commit({ thesis, qa, ticker, extraction, challenge, stru
           {desk === "error" && (
             <p className="m-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-bad">the desk could not take the play. it stays in this browser for now.</p>
           )}
+          {(desk === "saved" || desk === "skipped") && <LeadLine source="commit" ticker={ticker} className="mt-6" />}
         </div>
       )}
 
