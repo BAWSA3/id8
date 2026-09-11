@@ -34,6 +34,7 @@ export class Puppet {
 
   constructor() {
     this.el = document.createElement("div");
+    this.el.id = "film-cursor";
     this.el.setAttribute("aria-hidden", "true");
     this.el.style.cssText =
       "position:fixed;left:0;top:0;z-index:90;pointer-events:none;will-change:transform;opacity:0;transition:opacity .4s";

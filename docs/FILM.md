@@ -20,6 +20,10 @@ The stage is a viewport-sized box the film scales around a target (`src/componen
 
 A take named by contract address (`vehicle` on the take) makes the window switch to `[ contract ]` and paste the address instead of typing a ticker.
 
+### Living stills (held frames)
+
+`/film?auto=1&stop=<beat>` runs the take to that beat and freezes it there: the cursor leaves, the camera stays where it is, the grain keeps breathing. Record four seconds in Cursorful, press R, pick the next. Beats worth holding: `found` (the window, zoomed, with the found line), `q1` (the first question, zoomed), `line open` (the board with a line open), `dossier` (the evidence rows, zoomed), `ruling`, `desk`, `watch` (the watch, zoomed), `end`. The door needs no hold: open `/film` and do not roll.
+
 ### Freeze a new take
 
 ```

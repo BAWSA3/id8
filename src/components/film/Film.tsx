@@ -21,7 +21,7 @@ const SITE = "id8.markets";
 const STAGE_W = 1440;
 const STAGE_H = 810;
 
-export default function Film({ auto = false, end = false }: { auto?: boolean; end?: boolean }) {
+export default function Film({ auto = false, end = false, stop = "" }: { auto?: boolean; end?: boolean; stop?: string }) {
   const [ready, setReady] = useState(false);
   const [rolling, setRolling] = useState(false);
   const [ended, setEnded] = useState(false);
@@ -63,11 +63,19 @@ export default function Film({ auto = false, end = false }: { auto?: boolean; en
       onBeat: (name, ms) => {
         console.log(`[film] ${name} · ${(ms / 1000).toFixed(1)}s`);
         setBeats((b) => [...b, `${name} ${(ms / 1000).toFixed(1)}s`]);
+        /* a held frame: the take stops here, the cursor leaves, the grain keeps breathing */
+        if (stop && name === stop) {
+          p.hide();
+          console.log(`[film] held at ${name}`);
+          throw new Error("held");
+        }
       },
     })
       .then(() => setEnded(true))
-      .catch((e) => console.error("[film] stopped:", e));
-  }, []);
+      .catch((e) => {
+        if (!(e instanceof Error && e.message === "held")) console.error("[film] stopped:", e);
+      });
+  }, [stop]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

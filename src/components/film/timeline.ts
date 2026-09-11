@@ -103,6 +103,8 @@ export async function runFilm(p: Puppet, take: Take, opts: FilmOpts): Promise<vo
   await p.moveTo(check, 360);
   await p.click(check);
   beat("window");
+  await waitFor(() => /found ·/i.test(document.body.innerText), 15000, 80);
+  beat("found");
 
   /* 3 · present: the thesis, typed by hand */
   const thesis = await waitFor(() => document.getElementById("id8-input") as HTMLTextAreaElement | null);
@@ -201,6 +203,7 @@ export async function runFilm(p: Puppet, take: Take, opts: FilmOpts): Promise<vo
   const dossier = [...document.querySelectorAll<HTMLElement>("section")].find((s) => /target lock/i.test(s.innerText));
   if (dossier) {
     await cam.to(dossier, T.zoom.dossier, 900);
+    beat("dossier");
     await sleep(T.dossierHold);
     await cam.reset(700);
   } else {
@@ -270,6 +273,7 @@ export async function runFilm(p: Puppet, take: Take, opts: FilmOpts): Promise<vo
   await sleep(500);
   await p.moveTo(watch, 520, 0.5, 0.35);
   await cam.to(watch, T.zoom.watch, 900);
+  beat("watch");
   await sleep(T.deskHold);
   /* the card fades in over the zoomed desk; no pull back needed */
   await sleep(T.endHold);
