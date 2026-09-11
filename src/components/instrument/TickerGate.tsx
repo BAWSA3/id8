@@ -267,6 +267,20 @@ export default function TickerGate({
           </p>
         )}
 
+        {/* a single match by name is still a guess about the chain: the beat leaves a way out */}
+        {status === "found" && resolved && !resolved.exact && (
+          <button
+            onClick={() => {
+              setResolved(null);
+              setStatus("asking");
+              switchMode("contract");
+            }}
+            className={`${VERB} mt-3 text-faint hover:text-muted`}
+          >
+            [ not it? paste the contract ]
+          </button>
+        )}
+
         {/* the list: every token under that name, largest market first; a chain narrows it */}
         {status === "choosing" && (
           <div className="door-in mt-3">
