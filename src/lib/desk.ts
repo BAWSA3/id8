@@ -10,6 +10,7 @@ import type { WatchRead } from "@/lib/watch";
 export interface PlaySession {
   thesis: string;
   ticker: string | null;
+  vehicle?: { chain: string; address: string } | null;
   qa: QA[];
   extraction: Extraction;
   challenge: Challenge | null;

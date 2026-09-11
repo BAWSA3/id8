@@ -11,6 +11,82 @@ const BASE = "https://api.dexscreener.com";
 const CHAIN_IDS: Record<string, string> = {
   bnb: "bsc",
 };
+const NANSEN_CHAIN: Record<string, string> = { bsc: "bnb" };
+
+export interface AddressToken {
+  chain: string; // Nansen's name for the chain
+  symbol: string;
+  name: string;
+  address: string;
+  priceUsd: number;
+  marketCapUsd: number | null; // fdv when market cap is not reported
+  liquidityUsd: number;
+  volume24hUsd: number;
+  priceChange24hPct: number | null;
+  pools: Pool[];
+  poolCount: number;
+}
+
+/* a contract address, on every chain Dexscreener finds it trading: one entry per chain,
+   the deepest pool on that chain decides price and market cap, deepest chain first.
+   Search is only ever called with an address; by symbol it returns copycats. */
+export async function tokensByAddress(address: string): Promise<AddressToken[]> {
+  try {
+    const res = await fetch(`${BASE}/latest/dex/search?q=${encodeURIComponent(address)}`, {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return [];
+    const raw = (await res.json()) as { pairs?: (RawPair & { priceUsd?: string; fdv?: number; marketCap?: number; priceChange?: { h24?: number }; baseToken?: { address?: string; symbol?: string; name?: string } })[] };
+    const addr = address.toLowerCase();
+    const mine = (raw.pairs ?? []).filter((p) => p.baseToken?.address?.toLowerCase() === addr && (p.liquidity?.usd ?? 0) > 0);
+    const byChain = new Map<string, typeof mine>();
+    for (const p of mine) {
+      const id = p.chainId ?? "";
+      if (!byChain.has(id)) byChain.set(id, []);
+      byChain.get(id)!.push(p);
+    }
+    const out: AddressToken[] = [];
+    for (const [chainId, pairs] of byChain) {
+      const sorted = [...pairs].sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0));
+      const best = sorted[0];
+      const price = Number(best.priceUsd);
+      out.push({
+        chain: NANSEN_CHAIN[chainId] ?? chainId,
+        symbol: (best.baseToken?.symbol ?? "").toUpperCase(),
+        name: best.baseToken?.name ?? "",
+        address: best.baseToken?.address ?? address,
+        priceUsd: Number.isFinite(price) ? price : 0,
+        marketCapUsd: typeof best.marketCap === "number" ? Math.round(best.marketCap) : typeof best.fdv === "number" ? Math.round(best.fdv) : null,
+        liquidityUsd: Math.round(best.liquidity?.usd ?? 0),
+        volume24hUsd: Math.round(sorted.reduce((s, p) => s + (p.volume?.h24 ?? 0), 0)),
+        priceChange24hPct: typeof best.priceChange?.h24 === "number" ? best.priceChange.h24 : null,
+        pools: sorted
+          .map((p) => ({
+            dex: p.dexId ?? "",
+            version: p.labels?.[0] ?? null,
+            base: p.baseToken?.symbol ?? "",
+            quote: p.quoteToken?.symbol ?? "",
+            liquidityUsd: Math.round(p.liquidity?.usd ?? 0),
+            volume24hUsd: Math.round(p.volume?.h24 ?? 0),
+            pairAddress: p.pairAddress ?? "",
+            url: p.url ?? "",
+          }))
+          .slice(0, 3),
+        poolCount: sorted.length,
+      });
+    }
+    return out.sort((a, b) => b.liquidityUsd - a.liquidityUsd);
+  } catch {
+    return [];
+  }
+}
+
+/* the one chain named, or the deepest */
+export async function tokenByAddress(address: string, chain?: string): Promise<AddressToken | null> {
+  const list = await tokensByAddress(address);
+  return (chain ? list.find((t) => t.chain === chain) : list[0]) ?? null;
+}
 
 export interface Pool {
   dex: string;          // "uniswap"

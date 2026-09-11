@@ -16,6 +16,7 @@ import {
   type FeedLine,
   type QA,
   type StructureState,
+  type Vehicle,
 } from "@/lib/session";
 import TopBar from "@/components/hud/TopBar";
 import FrontDoor from "./FrontDoor";
@@ -48,6 +49,8 @@ interface Stored {
   challenge: Challenge | null;
   /* the named vehicle: string = ticker, null = narrative play, absent = not asked */
   ticker?: string | null;
+  /* the same vehicle by contract address, when the trader pasted one */
+  vehicle?: Vehicle | null;
   /* the ruling (structure) — absent on sessions that never got there */
   structure?: StructureState;
 }
@@ -57,6 +60,7 @@ export default function Session() {
   const [stage, setStage] = useState<Stage>("present");
   const [thesis, setThesis] = useState("");
   const [ticker, setTicker] = useState<string | null | undefined>(undefined);
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [qa, setQA] = useState<QA[]>([]);
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -89,6 +93,7 @@ export default function Session() {
           if (typeof s.thesis === "string") setThesis(s.thesis);
           if (typeof s.ticker === "string" || s.ticker === null) setTicker(s.ticker);
           else if (typeof s.thesis === "string" && s.thesis.trim()) setTicker(null); // pre-gate session: don't re-ask
+          if (s.vehicle && typeof s.vehicle.address === "string") setVehicle({ chain: String(s.vehicle.chain ?? ""), address: s.vehicle.address });
           if (Array.isArray(s.qa)) setQA(s.qa);
           if (s.extraction) setExtraction(s.extraction);
           if (s.challenge) {
@@ -113,14 +118,14 @@ export default function Session() {
 
   useEffect(() => {
     if (!hydrated) return;
-    const stored = { thesis, stage, qa, extraction, challenge, ticker, structure } satisfies Stored;
+    const stored = { thesis, stage, qa, extraction, challenge, ticker, vehicle, structure } satisfies Stored;
     /* an empty desk leaves nothing behind, so the next visit still reads as the first */
     if (isFreshStored(stored)) {
       localStorage.removeItem(STORE_KEY);
       return;
     }
     localStorage.setItem(STORE_KEY, JSON.stringify(stored));
-  }, [thesis, stage, qa, extraction, challenge, ticker, structure, hydrated]);
+  }, [thesis, stage, qa, extraction, challenge, ticker, vehicle, structure, hydrated]);
 
   const fetchChallenge = useCallback(async () => {
     if (fetching.current || !extraction) return;
@@ -132,7 +137,7 @@ export default function Session() {
       const res = await fetch("/api/challenge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thesis, extraction, ...(ticker ? { ticker } : {}) }),
+        body: JSON.stringify({ thesis, extraction, ...(ticker ? { ticker } : {}), ...(ticker && vehicle ? { vehicle } : {}) }),
       });
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => ({}));
@@ -171,7 +176,7 @@ export default function Session() {
       setTapeProgress(null);
       fetching.current = false;
     }
-  }, [thesis, extraction, ticker]);
+  }, [thesis, extraction, ticker, vehicle]);
 
   /* the desk's waiting line under the feed, only while the tape runs */
   const tapeWait = useMemo(
@@ -211,6 +216,7 @@ export default function Session() {
     setStage("present");
     setThesis("");
     setTicker(undefined);
+    setVehicle(null);
     setQA([]);
     setExtraction(null);
     setChallenge(null);
@@ -227,7 +233,7 @@ export default function Session() {
   };
 
   const label = ticker
-    ? `session 001 · $${ticker}`
+    ? `session 001 · $${ticker}${vehicle?.chain ? ` · ${vehicle.chain}` : ""}`
     : stage === "present"
       ? "session 001 · new play"
       : `session 001 · ${sessionSlug(thesis)}`;
@@ -266,8 +272,9 @@ export default function Session() {
       <div key={shownView} className={phaseOut ? "phase-out" : "phase-in"}>
         {shownView === "gate" && (
           <TickerGate
-            onDone={(t) => {
+            onDone={(t, hint) => {
               setTicker(t ?? null);
+              setVehicle(hint ?? null);
               setTimeout(() => document.getElementById("id8-input")?.focus(), 520);
             }}
             tour={tour}
@@ -280,7 +287,11 @@ export default function Session() {
             onChange={setThesis}
             onCommit={() => setStage("clarify")}
             ticker={ticker ?? null}
-            onChangeVehicle={() => setTicker(undefined)}
+            chain={vehicle?.chain ?? null}
+            onChangeVehicle={() => {
+              setTicker(undefined);
+              setVehicle(null);
+            }}
             tour={tour}
             onSkipTour={endTour}
           />
@@ -337,6 +348,7 @@ export default function Session() {
             thesis={thesis}
             qa={qa}
             ticker={ticker ?? null}
+            vehicle={vehicle}
             extraction={extraction}
             challenge={challenge}
             structure={structure}

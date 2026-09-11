@@ -1,5 +1,6 @@
 import "server-only";
-import { nativePrice, pairContext } from "@/lib/dexscreener";
+import { nativePrice, pairContext, tokenByAddress } from "@/lib/dexscreener";
+import { NANSEN_CHAINS } from "@/lib/chains";
 
 /* NansenAdapter — the seam between id8 and the Nansen API.
    Server-only: the API key must never reach the browser.
@@ -68,12 +69,22 @@ export interface TokenMarket {
   priceChangePct: number | null;
   marketCapUsd: number | null;
   liquidityUsd: number;
-  volumeUsd7d: number;
+  volumeUsd7d: number | null;
+  /* the last day's volume, when the market row came from the pools instead of the screener */
+  volumeUsd24h?: number;
   netflowUsd7d: number | null;
   tokenAgeDays: number | null;
   /* where each figure came from, when it is not the screener; read by the analyst as data */
   note?: string;
 }
+
+/* the vehicle named by contract address: the chain and address the session keeps,
+   so the tape, the ruling and the desk all read the same coin */
+export interface VehicleHint {
+  chain: string;
+  address: string;
+}
+export const ADDRESS_RE = /^(0x[0-9a-fA-F]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})$/;
 
 export interface TokenSegmentFlows {
   symbol: string;
@@ -101,10 +112,51 @@ export interface NansenAdapter {
     direction: "accumulating" | "distributing";
     limit?: number;
   }): Promise<NetflowRow[]>;
-  /* Symbol → best-match token with market data, or null if unknown. */
-  resolveToken(symbol: string): Promise<TokenMarket | null>;
+  /* Symbol → best-match token with market data, or null if unknown.
+     With a hint, the address decides: the market row from the pools, the flows by address. */
+  resolveToken(symbol: string, hint?: VehicleHint): Promise<TokenMarket | null>;
+  /* Symbol → every token on the tape under that name (one chain narrows it), largest market first. */
+  resolveCandidates(symbol: string, chain?: string): Promise<TokenMarket[]>;
   /* Per-segment 7d flows for a resolved token. */
   tokenSegmentFlows(token: TokenMarket): Promise<TokenSegmentFlows | null>;
+}
+
+/* a token named by address: Dexscreener finds the chain and the market row (a fresh
+   launch has no screener row yet), Nansen reads the cohorts by address on that chain */
+async function resolveByAddress(hint: VehicleHint): Promise<TokenMarket | null> {
+  const t = await tokenByAddress(hint.address, hint.chain || undefined);
+  if (!t) return null;
+  return {
+    symbol: t.symbol,
+    chain: t.chain,
+    address: t.address,
+    priceUsd: t.priceUsd,
+    priceChangePct: null,
+    marketCapUsd: t.marketCapUsd,
+    liquidityUsd: t.liquidityUsd,
+    volumeUsd7d: null,
+    volumeUsd24h: t.volume24hUsd,
+    netflowUsd7d: null,
+    tokenAgeDays: null,
+    note: `market row from dexscreener pools on ${t.chain} (price, market cap or fdv, liquidity, 24h volume); flows by holder segment from nansen by address; no screener row for this token yet`,
+  };
+}
+
+/* one screener row as the tape reads it */
+function rowToMarket(r: Raw): TokenMarket {
+  return {
+    symbol: str(r.token_symbol),
+    chain: str(r.chain),
+    address: str(r.token_address),
+    priceUsd: num(r.price_usd),
+    priceChangePct: Math.round(num(r.price_change) * 10000) / 100, // Nansen returns a fraction (0.0189); the tape reads 1.89
+    marketCapUsd: usd(r.market_cap_usd),
+    liquidityUsd: usd(r.liquidity),
+    volumeUsd7d: usd(r.volume),
+    netflowUsd7d: usd(r.netflow),
+    /* a brand-new token can come back with an epoch-zero age; that is not a figure */
+    tokenAgeDays: num(r.token_age_days) > 0 && num(r.token_age_days) < 15_000 ? Math.round(num(r.token_age_days)) : null,
+  };
 }
 
 /* ---------- live ---------- */
@@ -130,15 +182,8 @@ const num = (v: unknown): number => (typeof v === "number" && Number.isFinite(v)
 const usd = (v: unknown): number => Math.round(num(v));
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
-/* Every chain the token-screener accepts (422 lists them; "all" is rejected there).
-   Sampled live 2026-09-03. Robinhood chain carries tokenized equities (NVDA, SPY). */
-export const NANSEN_CHAINS = [
-  "ethereum", "solana", "base", "bnb", "arbitrum",
-  "hyperevm", "monad", "robinhood", "plasma", "polygon",
-  "avalanche", "optimism", "sonic", "sui", "ton",
-  "tron", "linea", "mantle", "sei", "near",
-  "injective", "mantra", "iotaevm", "starknet", "citrea", "bitcoin",
-] as const;
+/* Every chain the token-screener accepts lives in src/lib/chains.ts (client-safe); re-exported here */
+export { NANSEN_CHAINS } from "@/lib/chains";
 
 /* Chain-native coins don't sit on the spot tape under their own symbol — the
    wrapped token on the home chain is the market. Verified live 2026-09-03;
@@ -265,13 +310,19 @@ export class LiveNansenAdapter implements NansenAdapter {
     }));
   }
 
-  async resolveToken(symbol: string): Promise<TokenMarket | null> {
-    /* the screener takes at most 5 chains per call — fan out across every chain
-       Nansen indexes, tolerate per-batch failures, take the largest market */
-    if (NATIVE_COINS[symbol]) return nativeMarket(symbol);
+  async resolveCandidates(symbol: string, chain?: string): Promise<TokenMarket[]> {
+    /* the screener takes at most 5 chains per call: one batch when a chain is named,
+       otherwise fan out across every chain, tolerate per-batch failures, keep every row */
+    if (NATIVE_COINS[symbol]) {
+      if (chain && chain !== NATIVE_COINS[symbol].chain) return [];
+      const m = await nativeMarket(symbol);
+      return m ? [m] : [];
+    }
     const alias = NATIVE_ALIASES[symbol];
+    if (alias && chain && chain !== alias.chain) return [];
     const batches: string[][] = [];
     if (alias) batches.push([alias.chain]);
+    else if (chain) batches.push([chain]);
     else for (let i = 0; i < NANSEN_CHAINS.length; i += 5) batches.push(NANSEN_CHAINS.slice(i, i + 5));
     const settled = await Promise.allSettled(
       batches.map((chains) =>
@@ -280,32 +331,36 @@ export class LiveNansenAdapter implements NansenAdapter {
           timeframe: "7d",
           filters: { token_symbol: [alias ? alias.symbol : symbol] },
           order_by: [{ field: "market_cap_usd", direction: "DESC" }],
-          pagination: { page: 1, per_page: 3 },
+          pagination: { page: 1, per_page: 5 },
         }) as Promise<{ data?: Raw[] }>
       )
     );
     const rows = settled.flatMap((r) => (r.status === "fulfilled" ? r.value.data ?? [] : []));
-    if (!rows.length) {
-      if (settled.every((r) => r.status === "rejected")) {
-        throw (settled[0] as PromiseRejectedResult).reason;
-      }
-      return null;
+    if (!rows.length && settled.every((r) => r.status === "rejected")) {
+      throw (settled[0] as PromiseRejectedResult).reason;
     }
-    const r = rows.sort((a, b) => num(b.market_cap_usd) - num(a.market_cap_usd))[0];
-    return {
-      symbol: str(r.token_symbol),
-      chain: str(r.chain),
-      address: str(r.token_address),
-      priceUsd: num(r.price_usd),
-      priceChangePct: Math.round(num(r.price_change) * 10000) / 100, // Nansen returns a fraction (0.0189); the tape reads 1.89
-      marketCapUsd: usd(r.market_cap_usd),
-      liquidityUsd: usd(r.liquidity),
-      volumeUsd7d: usd(r.volume),
-      netflowUsd7d: usd(r.netflow),
-      tokenAgeDays: Math.round(num(r.token_age_days)),
-    };
+    const seen = new Set<string>();
+    const out: TokenMarket[] = [];
+    for (const r of rows.sort((x, y) => num(y.market_cap_usd) - num(x.market_cap_usd))) {
+      const key = `${str(r.chain)}:${str(r.token_address).toLowerCase()}`;
+      if (!str(r.token_address) || seen.has(key)) continue;
+      seen.add(key);
+      out.push(rowToMarket(r));
+    }
+    return out;
   }
-
+  async resolveToken(symbol: string, hint?: VehicleHint): Promise<TokenMarket | null> {
+    if (hint) {
+      /* the screener row on that chain when it exists (7d volume, netflow, age), else the pools */
+      if (symbol && hint.chain) {
+        const rows = await this.resolveCandidates(symbol, hint.chain).catch(() => [] as TokenMarket[]);
+        const exact = rows.find((t) => t.address.toLowerCase() === hint.address.toLowerCase());
+        if (exact) return exact;
+      }
+      return resolveByAddress(hint);
+    }
+    return (await this.resolveCandidates(symbol))[0] ?? null;
+  }
   async tokenSegmentFlows(token: TokenMarket): Promise<TokenSegmentFlows | null> {
     if (!token.address) return null;
     const json = (await nansenPost("/tgm/flow-intelligence", {
@@ -370,7 +425,12 @@ export class MockNansenAdapter implements NansenAdapter {
     ];
   }
 
-  async resolveToken(symbol: string): Promise<TokenMarket | null> {
+  async resolveCandidates(symbol: string): Promise<TokenMarket[]> {
+    const t = await this.resolveToken(symbol);
+    return t ? [t] : [];
+  }
+  async resolveToken(symbol: string, hint?: VehicleHint): Promise<TokenMarket | null> {
+    void hint;
     return {
       symbol: symbol.toUpperCase(),
       chain: "solana",

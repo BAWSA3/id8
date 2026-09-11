@@ -34,6 +34,7 @@ export default function Present({
   onChange,
   onCommit,
   ticker = null,
+  chain = null,
   onChangeVehicle,
   tour = false,
   onSkipTour,
@@ -42,6 +43,8 @@ export default function Present({
   onChange: (v: string) => void;
   onCommit: () => void;
   ticker?: string | null;
+  /* the chain the vehicle was named on, when the tape pinned one */
+  chain?: string | null;
   /* reopen the window — name a ticker, or change the one named */
   onChangeVehicle?: () => void;
   tour?: boolean;
@@ -81,7 +84,7 @@ export default function Present({
         {onChangeVehicle && (
           <p className="m-0 -mt-[22px] mb-[26px] font-mono text-[9.5px] uppercase tracking-[.16em] text-faint">
             <span className="text-faint">vehicle</span>{" "}
-            <span className="text-muted">{ticker ? `$${ticker}` : "a narrative, not a name"}</span>
+            <span className="text-muted">{ticker ? `$${ticker}${chain ? ` · ${chain}` : ""}` : "a narrative, not a name"}</span>
             <button
               onClick={onChangeVehicle}
               className="ml-3 whitespace-nowrap border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.16em] text-faint transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"

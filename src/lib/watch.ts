@@ -20,7 +20,8 @@ export interface TokenRead {
   priceChangePct: number | null;
   marketCapUsd: number | null;
   liquidityUsd: number;
-  volumeUsd7d: number;
+  volumeUsd7d: number | null;
+  volumeUsd24h?: number;
   netflowUsd7d: number | null;
   flows: {
     smartTraderNetFlowUsd: number;

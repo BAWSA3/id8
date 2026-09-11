@@ -34,10 +34,10 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
       try {
         const raw = localStorage.getItem(SESSION_STORE_KEY);
         if (raw) {
-          const s = JSON.parse(raw) as { thesis?: string; ticker?: string | null };
+          const s = JSON.parse(raw) as { thesis?: string; ticker?: string | null; vehicle?: { chain?: string } | null };
           /* same definition of a new visitor as the tour: an empty desk is not a session to resume */
           if (!isFreshStored(s)) {
-            if (s?.ticker) setResumeSlug(`$${s.ticker}`);
+            if (s?.ticker) setResumeSlug(`$${s.ticker}${s.vehicle?.chain ? ` · ${s.vehicle.chain}` : ""}`);
             else if (s?.thesis?.trim()) setResumeSlug(sessionSlug(s.thesis));
           }
         }

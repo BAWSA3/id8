@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { AnalystRefusal, runChallenge } from "@/lib/agents/analyst";
 import { clientIp, rateLimited, sameOrigin } from "@/lib/rate-limit";
 import { MAX_THESIS_CHARS } from "@/lib/session";
+import { ADDRESS_RE } from "@/lib/nansen/adapter";
 
 /* Same security posture as /api/clarify: zod-validated + capped inputs,
    untrusted-wrapping in the agent layer, bounded structured output,
@@ -22,6 +23,7 @@ const BodySchema = z.object({
     .string()
     .regex(/^[A-Za-z0-9$._-]{1,15}$/)
     .optional(),
+  vehicle: z.object({ chain: z.string().min(1).max(30), address: z.string().regex(ADDRESS_RE) }).optional(),
   extraction: z.object({
     claim: z.string().min(1).max(600),
     audience: z.string().max(300),
@@ -60,7 +62,7 @@ export async function POST(req: Request) {
     async start(controller) {
       const send = (e: unknown) => controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"));
       try {
-        const challenge = await runChallenge(body.thesis, extraction, body.ticker, send);
+        const challenge = await runChallenge(body.thesis, extraction, body.ticker, send, body.vehicle);
         send({ stage: "done", challenge });
       } catch (err) {
         send({ stage: "error", ...failure(err) });

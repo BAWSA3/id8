@@ -51,6 +51,23 @@ export const MAX_ANSWER_CHARS = 3000;
 export const SESSION_STORE_KEY = "id8.session.v3";
 export const TOUR_SEEN_KEY = "id8.tour.v1";
 
+/* the vehicle named by contract address: chain + address the session carries so every stage reads the same coin */
+export interface Vehicle {
+  chain: string;
+  address: string;
+}
+
+/* one token the tape found under a name or an address; the window lists these when there is more than one */
+export interface TickerCandidate {
+  symbol: string;
+  chain: string;
+  address: string;
+  marketCapUsd: number | null;
+  liquidityUsd: number;
+  volumeUsd7d: number | null;
+  tokenAgeDays: number | null;
+}
+
 /* A stored session with nothing on it yet: no thesis, no vehicle named, no answers.
    Session (the tour) and FrontDoor (resume) share this one definition of a new visitor. */
 export function isFreshStored(s: unknown): boolean {

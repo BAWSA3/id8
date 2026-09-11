@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { lineAfter, lineVerdict, type Challenge, type Extraction, type QA, type StructureState } from "@/lib/session";
+import { lineAfter, lineVerdict, type Challenge, type Extraction, type QA, type StructureState, type Vehicle } from "@/lib/session";
 import { buildDoc, buildMarkdown, encodeDoc } from "@/lib/doc";
 import { currentUser, savePlay } from "@/lib/desk";
 import { saveLocalPlay } from "@/lib/book";
@@ -19,6 +19,7 @@ interface Props {
   thesis: string;
   qa: QA[];
   ticker: string | null;
+  vehicle?: Vehicle | null;
   extraction: Extraction;
   challenge: Challenge | null;
   structure: StructureState;
@@ -31,7 +32,7 @@ type Copied = "doc" | "link" | "denied" | null;
 
 type DeskState = "checking" | "anon" | "saving" | "saved" | "skipped" | "error";
 
-export default function Commit({ thesis, qa, ticker, extraction, challenge, structure, onBack }: Props) {
+export default function Commit({ thesis, qa, ticker, vehicle = null, extraction, challenge, structure, onBack }: Props) {
   const [link, setLink] = useState<string | null>(null);
   /* the desk: a signed-in trader's play goes on the book now; anyone else is asked once */
   const [desk, setDesk] = useState<DeskState>("checking");
@@ -40,7 +41,7 @@ export default function Commit({ thesis, qa, ticker, extraction, challenge, stru
     const run = async () => {
       if (!supabaseConfigured()) {
         /* no store wired: the play goes on the local book */
-        saveLocalPlay({ thesis, ticker, qa, extraction, challenge, structure });
+        saveLocalPlay({ thesis, ticker, vehicle, qa, extraction, challenge, structure }, { chain: vehicle?.chain ?? null });
         return setDesk("saved");
       }
       const user = await currentUser();
@@ -48,7 +49,7 @@ export default function Commit({ thesis, qa, ticker, extraction, challenge, stru
       if (!user) return setDesk("anon");
       setDesk("saving");
       try {
-        await savePlay({ thesis, ticker, qa, extraction, challenge, structure });
+        await savePlay({ thesis, ticker, vehicle, qa, extraction, challenge, structure }, { chain: vehicle?.chain ?? null });
         if (alive) setDesk("saved");
       } catch {
         if (alive) setDesk("error");

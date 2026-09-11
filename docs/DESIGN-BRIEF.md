@@ -179,6 +179,9 @@ you notice it first, it's too loud.
 
 ## The opening window (locked 2026-09-02)
 
+**Updated 2026-09-11 (the right token).** The window has two ways to name the vehicle: `[ ticker ]` and `[ contract ]`. A ticker is a search across every chain the tape covers; when more than one token carries the name, the desk lists them (chain, symbol, address, mcap, liquidity, age) with an "on any chain" filter, and the trader picks. A contract address names the coin exactly: Dexscreener finds the chain and the market row, Nansen reads the cohorts by address. Either way the session keeps chain + address, and the found line shows it: `found · robinhood · $FLYBRAIN · 0x4Eb9…2d35 · mcap $… · ● live`. The label reads `session 001 · $FLYBRAIN · robinhood`; the book card shows the chain.
+
+
 After the door, the desk asks one question in a pixel-box dialog:
 "the desk › what are we looking at?" — a $TICKER field, [ check ], and a
 quiet hatch: "[ trading a narrative, not a name ]". The eclipse's travel

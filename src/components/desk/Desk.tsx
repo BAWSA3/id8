@@ -111,7 +111,7 @@ export default function Desk() {
     if (!play || reading[play.id]) return;
     const id = play.id;
     const sector = play.sector ?? sectorFromCards(play);
-    const body = { playId: id, ticker: play.ticker, sector, invalidation: play.session.structure.invalidation.slice(0, 400) };
+    const body = { playId: id, ticker: play.ticker, ...(play.session.vehicle ? { vehicle: play.session.vehicle } : {}), sector, invalidation: play.session.structure.invalidation.slice(0, 400) };
     const t = setTimeout(() => {
       setReading((r) => ({ ...r, [id]: "reading" }));
       void fetch("/api/watch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
@@ -252,7 +252,10 @@ export default function Desk() {
                     onClick={() => setSelected(p.id)}
                     className={`border-t border-line py-3 text-left transition-colors first:border-t-0 ${on ? "" : "opacity-70 hover:opacity-100"}`}
                   >
-                    <p className={`m-0 font-mono text-[12px] ${on ? "text-lock" : "text-ink"}`}>{p.ticker ? `$${p.ticker}` : p.slug}</p>
+                    <p className={`m-0 font-mono text-[12px] ${on ? "text-lock" : "text-ink"}`}>
+                      {p.ticker ? `$${p.ticker}` : p.slug}
+                      {p.ticker && (p.session.vehicle?.chain || p.chain) && <span className="text-faint"> · {p.session.vehicle?.chain ?? p.chain}</span>}
+                    </p>
                     <p className="m-0 mt-1 font-mono text-[9.5px] uppercase tracking-[.12em] text-faint">
                       booked {p.booked_at.slice(0, 10)}
                     </p>

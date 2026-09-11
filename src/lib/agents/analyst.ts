@@ -11,7 +11,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { plain } from "./plain";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { getNansenAdapter, MockNansenAdapter, type NansenAdapter } from "@/lib/nansen/adapter";
+import { getNansenAdapter, MockNansenAdapter, type NansenAdapter, type VehicleHint } from "@/lib/nansen/adapter";
 import { planEvidence, type EvidencePlan } from "@/lib/agents/planner";
 import type { Extraction } from "@/lib/agents/clarifier";
 import type { ChallengeProgress } from "@/lib/session";
@@ -65,7 +65,7 @@ interface Dataset {
 
 /* Assemble the evidence bundle the plan calls for. Each fetch fails
    independently — a dropped dataset just narrows what the Analyst can say. */
-async function gatherEvidence(adapter: NansenAdapter, plan: EvidencePlan): Promise<Dataset[]> {
+async function gatherEvidence(adapter: NansenAdapter, plan: EvidencePlan, vehicle?: { symbol: string } & VehicleHint): Promise<Dataset[]> {
   const jobs: Promise<Dataset | null>[] = [];
   const guard = <T>(label: string, p: Promise<T>): Promise<Dataset | null> =>
     p.then(
@@ -100,7 +100,7 @@ async function gatherEvidence(adapter: NansenAdapter, plan: EvidencePlan): Promi
   for (const symbol of plan.symbols) {
     jobs.push(
       (async (): Promise<Dataset | null> => {
-        const token = await adapter.resolveToken(symbol).catch(() => null);
+        const token = await adapter.resolveToken(symbol, vehicle && symbol === vehicle.symbol ? vehicle : undefined).catch(() => null);
         if (!token) return null;
         const flows = await adapter.tokenSegmentFlows(token).catch(() => null);
         return {
@@ -121,7 +121,9 @@ export async function runChallenge(
   extraction: Extraction,
   ticker?: string,
   /* optional: the route streams these to the desk as the tape moves */
-  onProgress?: (e: ChallengeProgress) => void
+  onProgress?: (e: ChallengeProgress) => void,
+  /* the vehicle by contract address, when the trader named one */
+  vehicle?: VehicleHint
 ): Promise<Challenge> {
   let adapter = getNansenAdapter();
   const plan = await planEvidence(
@@ -137,13 +139,14 @@ export async function runChallenge(
   }
   onProgress?.({ stage: "planned", sectors: plan.sectors, symbols: plan.symbols });
 
+  const hinted = ticker && vehicle ? { symbol: ticker.replace(/^\$/, "").toUpperCase(), ...vehicle } : undefined;
   let datasets: Dataset[] = [];
   if (plan.cryptoRelevant) {
-    datasets = await gatherEvidence(adapter, plan);
+    datasets = await gatherEvidence(adapter, plan, hinted);
     if (!datasets.length && !adapter.isMock) {
       // Live API fully down — fall back to labeled fixtures rather than silence.
       adapter = new MockNansenAdapter();
-      datasets = await gatherEvidence(adapter, plan);
+      datasets = await gatherEvidence(adapter, plan, hinted);
     }
   }
   const fixture = adapter.isMock;

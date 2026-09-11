@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getNansenAdapter, NANSEN_SECTORS, type TokenMarket } from "@/lib/nansen/adapter";
+import { ADDRESS_RE, getNansenAdapter, NANSEN_SECTORS, type TokenMarket } from "@/lib/nansen/adapter";
 import { pairContext } from "@/lib/dexscreener";
 import { nativePrice } from "@/lib/dexscreener";
 import { clientIp, rateLimited, sameOrigin } from "@/lib/rate-limit";
@@ -12,6 +12,7 @@ import { parseClause, splitClauses, type SectorRead, type TokenRead, type WatchC
 const Body = z.object({
   playId: z.string().min(1).max(80),
   ticker: z.string().regex(/^[A-Za-z0-9$._-]{1,15}$/).nullable(),
+  vehicle: z.object({ chain: z.string().min(1).max(30), address: z.string().regex(ADDRESS_RE) }).optional(),
   sector: z.string().max(60).nullable(),
   invalidation: z.string().max(400),
 });
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "invalid_request", message: "Malformed request." }, { status: 400 });
   }
-  const key = `${body.playId}|${body.ticker ?? ""}|${body.sector ?? ""}|${body.invalidation}`;
+  const key = `${body.playId}|${body.ticker ?? ""}|${body.vehicle?.address ?? ""}|${body.sector ?? ""}|${body.invalidation}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL_MS) return NextResponse.json({ read: hit.read, cached: true });
 
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
     if (!resolved.has(sym)) {
       if (resolved.size >= MAX_RESOLVES) return null;
       try {
-        resolved.set(sym, await adapter.resolveToken(sym));
+        resolved.set(sym, await adapter.resolveToken(sym, body.vehicle && sym === symbol ? body.vehicle : undefined));
       } catch {
         resolved.set(sym, null);
       }
@@ -87,6 +88,7 @@ export async function POST(req: Request) {
         marketCapUsd: t.marketCapUsd,
         liquidityUsd: t.liquidityUsd,
         volumeUsd7d: t.volumeUsd7d,
+        volumeUsd24h: t.volumeUsd24h,
         netflowUsd7d: t.netflowUsd7d,
         flows: flows
           ? {
@@ -153,12 +155,14 @@ export async function POST(req: Request) {
       }
     } else if (c.kind === "volume") {
       const t = c.symbol && c.symbol !== symbol ? await resolve(c.symbol) : null;
-      const read = t ?? (token ? { volumeUsd7d: token.volumeUsd7d, symbol: token.symbol } : null);
-      if (!read || c.threshold === undefined) {
+      const read = t ?? (token ? { volumeUsd7d: token.volumeUsd7d, volumeUsd24h: token.volumeUsd24h, symbol: token.symbol } : null);
+      const day = c.window === "24h" ? (token?.pool && !t ? token.pool.volume24hUsd : read?.volumeUsd24h ?? null) : null;
+      const week = read?.volumeUsd7d ?? null;
+      const v = c.window === "24h" ? (day ?? (week !== null ? week / 7 : null)) : week;
+      if (!read || c.threshold === undefined || v === null) {
         checks.push({ clause: c.text, kind: "unobservable", status: "unwatched", figure: null, detail: "no volume figure on the tape for this clause." });
         continue;
       }
-      const v = c.window === "24h" && token?.pool && !t ? token.pool.volume24hUsd : read.volumeUsd7d / (c.window === "24h" ? 7 : 1);
       const hit = c.comparator === "under" ? v < c.threshold : v > c.threshold;
       checks.push({ clause: c.text, kind: "volume", status: hit ? "breached" : "holding", figure: usd(v), detail: `${read.symbol} ${c.window} volume reads ${usd(v)}${c.window === "24h" && !(token?.pool && !t) ? " (7d averaged)" : ""} against ${usd(c.threshold)}.` });
     } else if (c.kind === "price") {
