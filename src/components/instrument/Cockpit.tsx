@@ -8,6 +8,7 @@ import PhaseMenu from "@/components/hud/PhaseMenu";
 import Dossier from "@/components/hud/Dossier";
 import AgentFeed from "@/components/hud/AgentFeed";
 import DeskCaption from "@/components/hud/DeskCaption";
+import Drift from "@/components/matter/Drift";
 
 /* The flagship composition: the board center stage, HUD floating around it.
    The board is progressive: the thesis and its lines show first; lock a line
@@ -109,6 +110,10 @@ export default function Cockpit({
 
   return (
     <div className="stage relative z-10 h-[calc(100vh-88px)] max-h-[880px] min-h-[540px]">
+      {/* while the tape reads, a form drifts behind the board; it clears when the tape lands */}
+      <div className={reveal(!!wait)}>
+        <Drift className="opacity-80" />
+      </div>
       <Constellation
         nodes={board.nodes}
         edges={board.edges}

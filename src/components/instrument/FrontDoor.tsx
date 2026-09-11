@@ -1,84 +1,36 @@
 "use client";
 
-/* The front door: eclipse + wordmark + one [ begin ] on a clean slate.
-   On begin, the orb travels into the page and lands as the idea seed
-   (element #id8-seed rendered by Present beneath this overlay). */
+/* The front door: the eclipse as a body, off frame to the right, the wordmark
+   small in the corner, one line and one [ open the desk ] low left, the index
+   band along the bottom. On begin, the body's core travels into the page and
+   lands as the idea seed (#id8-seed, rendered beneath this overlay). */
 
 import { useEffect, useRef, useState } from "react";
 import { SESSION_STORE_KEY, isFreshStored, sessionSlug } from "@/lib/session";
-import Horizon from "@/components/hud/Horizon";
 import { localBookCount } from "@/lib/book";
+import Stone, { type StonePose } from "@/components/matter/Stone";
+import Grain from "@/components/matter/Grain";
+import IndexBand from "@/components/hud/IndexBand";
 
-/* Boot readout — the door's whisper layer. Doubles as the only product
-   explanation a cold visitor gets: live feed, real coverage, the hard rule. */
-const BOOT_LINES: { k: string; v: string; live?: boolean }[] = [
-  { k: "booting", v: "thesis desk" },
-  { k: "nansen smart money", v: "live", live: true },
-  { k: "sectors tracked", v: "29" },
-  { k: "chains on the tape", v: "26" },
-  { k: "holder cohorts", v: "whales · smart · fresh" },
-  { k: "writes your trade", v: "never" },
-];
-const BOOT_START_MS = 950; /* after the center's curtain-up settles */
-const BOOT_STEP_MS = 280;
-
-function BootReadout() {
-  const [shown, setShown] = useState(0);
-
-  useEffect(() => {
-    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const start = performance.now();
-    const t = setInterval(() => {
-      const n = reduced
-        ? BOOT_LINES.length
-        : Math.min(
-            BOOT_LINES.length,
-            Math.max(0, Math.floor((performance.now() - start - BOOT_START_MS) / BOOT_STEP_MS) + 1)
-          );
-      setShown(n);
-      if (n >= BOOT_LINES.length) clearInterval(t);
-    }, 90);
-    return () => clearInterval(t);
-  }, []);
-
-  return (
-    <div
-      aria-hidden="true"
-      className="fixed bottom-10 left-10 z-[61] hidden w-[300px] flex-col gap-[7px] font-mono text-[9.5px] uppercase tracking-[.14em] sm:flex"
-    >
-      {BOOT_LINES.map((l, i) => (
-        <div
-          key={l.k}
-          className={`flex items-baseline gap-2 transition-opacity duration-300 ${i < shown ? "opacity-100" : "opacity-0"}`}
-        >
-          <span className="text-faint">{l.k}</span>
-          <span className="min-w-4 flex-1 border-b border-dotted border-line" />
-          <span className={l.live ? "text-lock" : "text-muted"}>
-            {l.live && <span className="seed mr-1.5 inline-block align-[1px]" style={{ width: 5, height: 5 }} />}
-            {l.v}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
+const POSE: StonePose = { anchor: [1.0, 0.5], radius: 0.46 };
+const PORTRAIT: StonePose = { anchor: [0.5, 0.3], radius: 0.58 };
 
 export default function FrontDoor({ onDone }: { onDone: () => void }) {
-  const orbRef = useRef<HTMLSpanElement>(null);
+  const coreRef = useRef<HTMLSpanElement>(null);
   const travelerRef = useRef<HTMLSpanElement>(null);
   const [leaving, setLeaving] = useState(false);
-  const [primed, setPrimed] = useState(false);
+  const [portrait, setPortrait] = useState(false);
   /* one door: the button acknowledges a session in progress and resumes it */
   const [resumeSlug, setResumeSlug] = useState<string | null>(null);
   const [bookCount, setBookCount] = useState(0);
-  useEffect(() => {
-    const t = setTimeout(() => setBookCount(localBookCount()), 0);
-    return () => clearTimeout(t);
-  }, []);
   const started = useRef(false);
 
   useEffect(() => {
+    const mq = matchMedia("(orientation: portrait)");
+    const apply = () => setPortrait(mq.matches);
     const t = setTimeout(() => {
+      apply();
+      setBookCount(localBookCount());
       try {
         const raw = localStorage.getItem(SESSION_STORE_KEY);
         if (raw) {
@@ -93,7 +45,11 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
         /* no storage — fresh visit */
       }
     }, 0);
-    return () => clearTimeout(t);
+    mq.addEventListener("change", apply);
+    return () => {
+      clearTimeout(t);
+      mq.removeEventListener("change", apply);
+    };
   }, []);
 
   function begin() {
@@ -101,22 +57,21 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
     started.current = true;
 
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const orb = orbRef.current;
+    const core = coreRef.current;
     const traveler = travelerRef.current;
     const seed = document.getElementById("id8-seed");
 
-    if (reduced || !orb || !traveler || !seed) {
+    if (reduced || !core || !traveler || !seed) {
       onDone();
       return;
     }
 
-    const a = orb.getBoundingClientRect();
+    const a = core.getBoundingClientRect();
     const b = seed.getBoundingClientRect();
     const scale = b.width / a.width;
 
     traveler.style.opacity = "1";
     traveler.style.transform = `translate(${a.left}px, ${a.top}px) scale(1)`;
-    orb.style.visibility = "hidden";
     setLeaving(true);
 
     requestAnimationFrame(() =>
@@ -129,53 +84,61 @@ export default function FrontDoor({ onDone }: { onDone: () => void }) {
     setTimeout(onDone, 950);
   }
 
+  const pose = portrait ? PORTRAIT : POSE;
+
   return (
     <>
       <div
-        className={`fixed inset-0 z-[60] flex flex-col items-center justify-center bg-bg transition-opacity duration-700 ${leaving ? "pointer-events-none opacity-0" : "opacity-100"}`}
+        className={`fixed inset-0 z-[60] overflow-hidden bg-bg transition-opacity duration-700 ${leaving ? "pointer-events-none opacity-0" : "opacity-100"}`}
       >
-        <Horizon />
+        <Stone pose={POSE} portrait={PORTRAIT} />
+        {/* the body's core: where the traveler takes off from */}
         <span
-          ref={orbRef}
-          className={`orb breathing door-in mb-[34px] size-[76px] ${primed ? "primed" : ""}`}
-          style={{ animationDelay: "0.05s" }}
-          aria-label="id8, the eclipse"
-        >
-          <span className="orb-trail" />
-          <span className="orb-core" />
-        </span>
-        <h1 className="door-in m-0 mb-[18px] text-[56px] font-bold leading-none tracking-[-.02em]" style={{ animationDelay: "0.24s" }}>
-          id<i className="font-light italic">8</i>
-        </h1>
-        <p className="door-in m-0 mb-[52px] font-mono text-[11px] uppercase tracking-[.26em] text-muted" style={{ animationDelay: "0.42s" }}>
-          a canvas for your thesis
-        </p>
-        <button
-          onClick={begin}
-          onMouseEnter={() => setPrimed(true)}
-          onMouseLeave={() => setPrimed(false)}
-          onFocus={() => setPrimed(true)}
-          onBlur={() => setPrimed(false)}
-          className="door-in border border-line bg-transparent px-[34px] py-[13px] font-mono text-[11px] uppercase tracking-[.22em] text-ink transition-colors hover:border-lock-deep hover:text-lock-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
-          style={{ animationDelay: "0.6s" }}
-        >
-          {resumeSlug ? "[ back to the desk ]" : "[ open the desk ]"}
-        </button>
-        {resumeSlug && (
-          <p className="door-in m-0 mt-[16px] font-mono text-[9.5px] uppercase tracking-[.18em] text-faint" style={{ animationDelay: "0.74s" }}>
-            session 001 · {resumeSlug}
+          ref={coreRef}
+          aria-hidden="true"
+          className="absolute size-[76px] -translate-x-1/2 -translate-y-1/2"
+          style={{ left: `${pose.anchor[0] * 100}%`, top: `${pose.anchor[1] * 100}%` }}
+        />
+
+        <div className="door-in absolute left-[5vw] top-[5vh] flex items-baseline gap-4" style={{ animationDelay: "0.05s" }}>
+          <h1 className="m-0 text-[clamp(22px,2.4vw,34px)] font-bold leading-none tracking-[-.03em]">
+            id<i className="font-light italic">8</i>
+          </h1>
+          <p className="m-0 font-mono text-[10px] uppercase tracking-[.26em] text-muted">a canvas for your thesis</p>
+        </div>
+
+        <div className="absolute bottom-[18vh] left-[5vw] flex max-w-[min(50vw,560px)] flex-col gap-6 portrait:bottom-[15vh] portrait:max-w-[88vw]">
+          <p className="door-in m-0 text-[clamp(18px,1.9vw,28px)] font-medium leading-[1.25] tracking-[-.01em] [text-wrap:balance]" style={{ animationDelay: "0.24s" }}>
+            Present the play. <span className="text-muted">The desk asks the hard questions, then the tape weighs in.</span>
           </p>
-        )}
-        {bookCount > 0 && (
-          <a
-            href="/desk"
-            className="door-in mt-[14px] border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.18em] text-faint transition-colors hover:text-muted focus-visible:text-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
-            style={{ animationDelay: "0.86s" }}
-          >
-            [ the book · {String(bookCount).padStart(2, "0")} {bookCount === 1 ? "play" : "plays"} ]
-          </a>
-        )}
-        <BootReadout />
+          <div className="door-in flex flex-wrap items-baseline gap-x-5 gap-y-3" style={{ animationDelay: "0.42s" }}>
+            <button
+              onClick={begin}
+              className="border border-line bg-transparent px-[30px] py-[12px] font-mono text-[11px] uppercase tracking-[.22em] text-ink transition-colors hover:border-lock-deep hover:text-lock-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
+            >
+              {resumeSlug ? "[ back to the desk ]" : "[ open the desk ]"}
+            </button>
+            {resumeSlug && (
+              <span className="font-mono text-[9.5px] uppercase tracking-[.18em] text-faint">session 001 · {resumeSlug}</span>
+            )}
+            {bookCount > 0 && (
+              <a
+                href="/desk"
+                className="border-0 bg-transparent p-0 font-mono text-[9.5px] uppercase tracking-[.18em] text-faint transition-colors hover:text-muted focus-visible:text-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lock"
+              >
+                [ the book · {String(bookCount).padStart(2, "0")} {bookCount === 1 ? "play" : "plays"} ]
+              </a>
+            )}
+          </div>
+        </div>
+
+        <IndexBand
+          className="door-in absolute inset-x-[5vw] bottom-[5vh]"
+          left={["thesis desk", "plate zero zero one"]}
+          right={["nansen smart money", "live · 29 sectors · 26 chains"]}
+          tail="©2026"
+        />
+        <Grain strength={0.7} />
       </div>
 
       {/* the traveling eclipse — ink at takeoff, sage on landing */}

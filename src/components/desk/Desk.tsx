@@ -23,6 +23,7 @@ import PlayBoard from "./PlayBoard";
 import DeskAsk from "./DeskAsk";
 import LeadLine from "./LeadLine";
 import Orb from "./Orb";
+import Drift from "@/components/matter/Drift";
 
 type State = "loading" | "ask" | "room";
 
@@ -207,6 +208,7 @@ export default function Desk() {
     <main className="relative mx-auto w-full max-w-[1280px] px-6 pb-16 pt-6 md:px-10">
       {/* the character, behind everything, clipped to the room */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {plays.length === 0 && <Drift className="opacity-70" />}
         <Orb size={640} className="-right-40 -top-24 hidden md:block" />
       </div>
 

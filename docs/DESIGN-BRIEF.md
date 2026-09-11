@@ -272,3 +272,14 @@ chaotic. The board is now progressive and still:
 - Ambience: the core glow and the drifting debris stay. The grid and the
   disc under the core are gone.
 - Hint: "drag to rotate · scroll to zoom · click a line to open its evidence".
+
+## Matter (2026-09-11)
+
+The poster surfaces gain matter; the instruments keep the dither. References: a rock under raking light on black (Berä), a blurred form entering the frame under film grain (BESSA). Study with both treatments: https://claude.ai/code/artifact/2d88d431-9cad-452e-a499-296c794afac4
+
+- **Stone** is the eclipse as a body: canvas-rendered, raking light from the upper left, hard terminator, ridged surface, off frame. The door and the film's end card. `src/lib/matter.ts` renderStone, `src/components/matter/Stone.tsx`.
+- **Drift** is a blurred form crossing the frame, no silhouette, so it sits behind copy. The tape wait behind the board, the empty desk. `Drift.tsx`.
+- **Grain** is live film noise at eight frames a second, still under reduced motion, overlay blend so it lives on the lit body and the type, not the black. `Grain.tsx`. Poster surfaces only.
+- **The index band** runs along the bottom of every poster surface: `A/ ●● 1`, the plate number in the pixel face, two-line labels either side, a module glyph in the middle on wide screens. `src/components/hud/IndexBand.tsx`. The one acid dot in the band is the surface's only color.
+- The share card keeps its layout and gains the index row only: on X it renders at phone width and the claim has to win.
+- Poster surfaces: door, end card, share card, tape wait, empty states. Instrument surfaces (clarify, the board, the ruling, the desk in use) are untouched.

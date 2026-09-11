@@ -68,8 +68,23 @@ export async function GET(req: Request) {
             <div style={{ display: "flex", fontSize: 13, letterSpacing: 4, color: "#ff4b1f" }}>OFF THE BOOK IF</div>
             <div style={{ display: "flex", fontSize: 17, letterSpacing: 1, color: "#8b8678" }}>{trim(doc.invalidation, 100).toUpperCase()}</div>
           </div>
-          <div style={{ display: "flex", marginTop: 10, fontSize: 14, letterSpacing: 4, color: "#4e4b43" }}>
-            PRESSURE-TESTED ON ID8 · {doc.live ? "LIVE NANSEN TAPE" : "FIXTURE TAPE"} · WRITES YOUR TRADE: NEVER
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, fontSize: 13, letterSpacing: 4, color: "#8b8678" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <span>A/</span>
+              <div style={{ display: "flex", gap: 4 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: "#cfff2e" }} />
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: "#e9e4d6" }} />
+              </div>
+              <span style={{ color: "#e9e4d6" }}>1</span>
+              <div style={{ display: "flex", flexDirection: "column", fontSize: 11, lineHeight: 1.2, color: "#4e4b43" }}>
+                <span>PRESSURE TESTED ON ID8</span>
+                <span>{doc.live ? "LIVE NANSEN TAPE" : "FIXTURE TAPE"}</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: 11, lineHeight: 1.2, color: "#4e4b43" }}>
+              <span>WRITES YOUR TRADE</span>
+              <span>NEVER</span>
+            </div>
           </div>
         </div>
       </div>

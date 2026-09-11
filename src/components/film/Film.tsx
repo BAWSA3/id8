@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Session from "@/components/instrument/Session";
-import Horizon from "@/components/hud/Horizon";
+import EndCard from "./EndCard";
 import { StageContext, type Stage } from "@/lib/stage";
 import { SESSION_STORE_KEY, TOUR_SEEN_KEY } from "@/lib/session";
 import { installFilmFetch, type Take } from "@/lib/film/shim";
@@ -19,7 +19,7 @@ const SITE = "id8.markets";
 const STAGE_W = 1440;
 const STAGE_H = 810;
 
-export default function Film({ auto = false }: { auto?: boolean }) {
+export default function Film({ auto = false, end = false }: { auto?: boolean; end?: boolean }) {
   const [ready, setReady] = useState(false);
   const [rolling, setRolling] = useState(false);
   const [ended, setEnded] = useState(false);
@@ -87,25 +87,7 @@ export default function Film({ auto = false }: { auto?: boolean }) {
     <StageContext.Provider value={stage}>
       {ready && <Session />}
 
-      {/* the end card */}
-      <div
-        className={`fixed inset-0 z-[80] flex flex-col items-center justify-center bg-bg transition-opacity duration-[1200ms] ${ended ? "opacity-100" : "pointer-events-none opacity-0"}`}
-        aria-hidden={!ended}
-      >
-        <Horizon />
-        <span className="orb breathing mb-[34px] size-[76px]" aria-label="id8, the eclipse">
-          <span className="orb-trail" />
-          <span className="orb-core" />
-        </span>
-        <h1 className="m-0 mb-[18px] text-[56px] font-bold leading-none tracking-[-.02em]">
-          id<i className="font-light italic">8</i>
-        </h1>
-        <p className="m-0 mb-[40px] font-mono text-[11px] uppercase tracking-[.26em] text-muted">a canvas for your thesis</p>
-        <p className="m-0 font-mono text-[12px] tracking-[.2em] text-lock">{SITE}</p>
-        <p className="m-0 mt-[14px] font-mono text-[9.5px] uppercase tracking-[.18em] text-faint">
-          live nansen smart money · never writes your trade
-        </p>
-      </div>
+      <EndCard show={ended || end} site={SITE} />
 
       {/* the booth: only before the take rolls, never on ?auto=1 */}
       {!rolling && !auto && (
